@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './modules/user/user.module';
 import { getDatabaseConfig } from './config/database.config';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { getDatabaseConfig } from './config/database.config';
       useFactory: getDatabaseConfig,
     }),
     UserModule,
+    AuthModule,  
   ],
   controllers: [AppController],
   providers: [AppService],
