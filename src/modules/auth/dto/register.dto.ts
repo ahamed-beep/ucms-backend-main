@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from 'class-validator';
 
 export class RegisterDto {
   @IsString()
@@ -14,6 +14,8 @@ export class RegisterDto {
   emailId: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
+  @Matches(/[A-Z]/, { message: 'Password must contain at least 1 uppercase letter' })
+  @Matches(/[!@#$%^&*(),.?":{}|<>]/, { message: 'Password must contain at least 1 special character' })
   password: string;
 }

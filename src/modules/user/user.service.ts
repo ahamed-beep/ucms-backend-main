@@ -1,9 +1,11 @@
+// src/modules/user/user.service.ts
 import { Injectable, Logger, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User, UserDocument } from './entities/user.entity';
 import { RegisterDto } from '../auth/dto/register.dto';
+import { IUser } from './interfaces/user.interface';
 
 @Injectable()
 export class UserService {
@@ -13,7 +15,7 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async createUser(registerDto: RegisterDto): Promise<{ success: boolean; message: string; data?: { id: string } }> {
+  async createUser(registerDto: RegisterDto) {
     try {
       const existing = await this.userModel.findOne({ emailId: registerDto.emailId });
       if (existing) {
@@ -40,7 +42,14 @@ export class UserService {
     }
   }
 
-  async findByEmail(email: string): Promise<UserDocument | null> {
+  async findByEmail(email: string): Promise<(IUser & UserDocument) | null> {
     return this.userModel.findOne({ emailId: email.toLowerCase().trim() });
+  }
+
+  async updatePassword(email: string, hashedPassword: string): Promise<void> {
+    await this.userModel.updateOne(
+      { emailId: email.toLowerCase().trim() },
+      { password: hashedPassword },
+    );
   }
 }
