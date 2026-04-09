@@ -21,10 +21,18 @@ export class SerializeInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     return next.handle().pipe(
-      map((data: unknown) => {
-        return plainToInstance(this.dto, data, {
-          excludeExtraneousValues: true,
-        });
+      map((response: any) => {
+        if (response && typeof response === 'object' && 'data' in response) {
+          const serialized = Array.isArray(response.data)
+            ? response.data.map((item: unknown) =>
+                plainToInstance(this.dto, item, { excludeExtraneousValues: true })
+              )
+            : plainToInstance(this.dto, response.data, { excludeExtraneousValues: true });
+
+          return { ...response, data: serialized };
+        }
+
+        return plainToInstance(this.dto, response, { excludeExtraneousValues: true });
       }),
     );
   }
