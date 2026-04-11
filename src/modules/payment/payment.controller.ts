@@ -9,7 +9,6 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
-  Redirect,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { Public } from 'src/common/decorators/public.decorator';
@@ -31,7 +30,7 @@ export class PaymentController {
   ): Promise<ICreatePaymentOrderResponse> {
     try {
       return await this.paymentService.createOrder(dto);
-    } catch (error) {
+    } catch (error: any) {  // <-- any lagao
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to create payment order');
     }
@@ -45,7 +44,7 @@ export class PaymentController {
   ): Promise<ICapturePaymentResponse> {
     try {
       return await this.paymentService.capturePayment(paymentId, paypalOrderId);
-    } catch (error) {
+    } catch (error: any) {  // <-- any lagao
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to capture payment');
     }
@@ -58,7 +57,7 @@ export class PaymentController {
   ): Promise<{ success: boolean; message: string }> {
     try {
       return await this.paymentService.cancelPayment(paymentId);
-    } catch (error) {
+    } catch (error: any) {  // <-- any lagao
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to cancel payment');
     }
@@ -71,7 +70,7 @@ export class PaymentController {
     try {
       const payments = await this.paymentService.findAll();
       return { success: true, data: payments };
-    } catch (error) {
+    } catch (error: any) {  // <-- any lagao
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to fetch payments');
     }
@@ -84,7 +83,7 @@ export class PaymentController {
     try {
       const payment = await this.paymentService.findById(id);
       return { success: true, data: payment };
-    } catch (error) {
+    } catch (error: any) {  // <-- any lagao
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to fetch payment');
     }
@@ -97,7 +96,7 @@ export class PaymentController {
     try {
       const payments = await this.paymentService.findByServicePage(servicePageId);
       return { success: true, data: payments };
-    } catch (error) {
+    } catch (error: any) {  
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to fetch payments');
     }
