@@ -1,9 +1,13 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { FAQResponseDto } from './faq-response.dto';
 
 export class ServicePageResponseDto {
   @Expose()
   id: string;
+
+  @Expose()
+  @Transform(({ obj }) => obj._id?.toString())
+  _id: string;  
 
   @Expose()
   iconUrl: string;

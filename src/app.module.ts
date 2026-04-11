@@ -15,6 +15,8 @@ import { ServicePageController } from './modules/service/service-page.controller
 import { ServicePageService } from './modules/service/service-page.service';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ActiveGuard } from './common/guards/active.guard';
+import { PaymentModule } from './modules/payment/payment.module';
+import { PaypalService } from './modules/payment/paypal.service';
 
 @Module({
   imports: [
@@ -30,13 +32,14 @@ import { ActiveGuard } from './common/guards/active.guard';
     AuthModule,
     ServicePageModule,
     CloudinaryModule,
+    PaymentModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   { provide: APP_GUARD, useClass: RolesGuard },   
-  { provide: APP_GUARD, useClass: ActiveGuard },
+  { provide: APP_GUARD, useClass: ActiveGuard }, PaypalService,
   ],
 })
 export class AppModule {}

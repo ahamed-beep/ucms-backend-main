@@ -22,18 +22,40 @@ export class SerializeInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     return next.handle().pipe(
       map((response: any) => {
-        if (response && typeof response === 'object' && 'data' in response) {
-          const serialized = Array.isArray(response.data)
-            ? response.data.map((item: unknown) =>
-                plainToInstance(this.dto, item, { excludeExtraneousValues: true })
-              )
-            : plainToInstance(this.dto, response.data, { excludeExtraneousValues: true });
-
-          return { ...response, data: serialized };
+        if (Array.isArray(response)) {
+          return response.map((item) => this.transformDoc(item));
         }
 
-        return plainToInstance(this.dto, response, { excludeExtraneousValues: true });
+        if (response && typeof response === 'object' && Array.isArray(response.data)) {
+          return {
+            ...response,
+            data: response.data.map((item: any) => this.transformDoc(item)),
+          };
+        }
+
+        if (response && typeof response === 'object' && 'data' in response) {
+          return {
+            ...response,
+            data: response.data ? this.transformDoc(response.data) : response.data,
+          };
+        }
+
+        return this.transformDoc(response);
       }),
     );
+  }
+
+  private toPlainObject(doc: any): any {
+    if (!doc || typeof doc !== 'object') return doc;
+    if (typeof doc.toObject === 'function') {
+      const plain = doc.toObject({ virtuals: true });
+      if (plain._id) plain._id = plain._id.toString();
+      return plain;
+    }
+    return doc;
+  }
+
+  private transformDoc(doc: any): any {
+    return plainToInstance(this.dto, this.toPlainObject(doc));
   }
 }
