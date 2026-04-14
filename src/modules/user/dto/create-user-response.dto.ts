@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 
 class CreatedUserDataDto {
   @Expose()
@@ -13,5 +13,6 @@ export class CreateUserResponseDto {
   message: string;
 
   @Expose()
+  @Type(() => CreatedUserDataDto)  
   data: CreatedUserDataDto;
 }

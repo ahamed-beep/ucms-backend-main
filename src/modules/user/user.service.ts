@@ -83,23 +83,24 @@ export class UserService {
   }
 
   async getAllUsers() {
-    try {
-      const users = await this.userModel
-        .find({}, { password: 0 })
-        .sort({ createdAt: -1 })
-        .lean();
+  try {
+    const users = await this.userModel
+      .find({}, { password: 0 })
+      .sort({ createdAt: -1 });
 
-      return {
-        success: true,
-        message: 'Users fetched successfully',
-        total: users.length,
-        data: users,
-      };
-    } catch (error) {
-      this.logger.error('getAllUsers error:', error);
-      throw error;
-    }
+    console.log('RAW USER:', JSON.stringify(users[0]));  // ← yeh add karo
+
+    return {
+      success: true,
+      message: 'Users fetched successfully',
+      total: users.length,
+      data: users,
+    };
+  } catch (error) {
+    this.logger.error('getAllUsers error:', error);
+    throw error;
   }
+}
 
   async toggleUserStatus(userId: string) {
     try {
