@@ -23,21 +23,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? (exceptionResponse as { message?: unknown; error?: unknown })
         : null;
 
-    const errorResponse = {
-      success: false,
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      message:
-        typeof exceptionResponse === 'string'
-          ? exceptionResponse
-          : (responseObj?.message as string) || 'An error occurred',
-      error:
-        typeof exceptionResponse === 'object'
-          ? (responseObj?.error as string)
-          : undefined,
-    };
+   const errorResponse = {
+  success: false,
+  statusCode: status,
+  timestamp: new Date().toISOString(),
+  path: request.url,
+  method: request.method,
+  message:
+    typeof exceptionResponse === 'string'
+      ? exceptionResponse
+      : (responseObj?.message as string) || 'An error occurred',
+  errors:
+    typeof exceptionResponse === 'object'
+      ? (responseObj as any)?.errors
+      : undefined, 
+  error:
+    typeof exceptionResponse === 'object'
+      ? (responseObj?.error as string)
+      : undefined,
+};
 
     this.logger.error(
       `${request.method} ${request.url}`,

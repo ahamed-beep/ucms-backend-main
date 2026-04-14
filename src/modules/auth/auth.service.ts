@@ -84,7 +84,6 @@ export class AuthService {
     const email = emailId.toLowerCase().trim();
     const user = await this.userService.findByEmail(email);
 
-    // security: same response chahe user ho ya na ho
     if (!user) {
       return { success: true, message: 'If this email exists, an OTP has been sent.' };
     }
@@ -93,22 +92,19 @@ export class AuthService {
       return { success: false, status: 403, message: 'Account is disabled. Contact support.' };
     }
 
-    // 6 digit OTP generate karo
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // OTP ko JWT mein encode karo — 5 min valid
    const otpToken = this.jwtService.sign(
   { email, otp, purpose: OTP_PURPOSE.VERIFICATION },
   { expiresIn: '5m' },
 );
 
-    // email bhejo
     await this.emailService.sendOtpEmail(email, otp);
 
     return {
       success: true,
       message: 'OTP sent to your email.',
-      otpToken, // frontend ko bhejo — verify pe wapis aaye ga
+      otpToken, 
     };
   } catch (error) {
     this.logger.error('forgotPassword error:', error);
@@ -116,7 +112,6 @@ export class AuthService {
   }
 }
 
-// ─── Resend OTP ────────────────────────────────────────────
 async resendOtp(emailId: string) {
   try {
     const email = emailId.toLowerCase().trim();
@@ -150,7 +145,6 @@ async resendOtp(emailId: string) {
   }
 }
 
-// ─── Verify OTP ────────────────────────────────────────────
 async verifyOtp(emailId: string, otp: string, otpToken: string) {
   try {
     const email = emailId.toLowerCase().trim();
@@ -175,7 +169,6 @@ async verifyOtp(emailId: string, otp: string, otpToken: string) {
       return { success: false, status: 400, message: 'Invalid OTP.' };
     }
 
-    // OTP sahi — reset token generate karo (10 min valid)
   const resetToken = this.jwtService.sign(
   { email, purpose: OTP_PURPOSE.PASSWORD_RESET },
   { expiresIn: '10m' },
@@ -192,7 +185,6 @@ async verifyOtp(emailId: string, otp: string, otpToken: string) {
   }
 }
 
-// ─── Reset Password ────────────────────────────────────────
 async resetPassword(resetToken: string, newPassword: string) {
   try {
     let payload: { email: string; purpose: string };
