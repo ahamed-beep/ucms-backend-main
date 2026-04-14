@@ -12,50 +12,75 @@ interface ClassConstructor {
   new (...args: unknown[]): object;
 }
 
-export function SerializeResponse(dto: ClassConstructor) {
-  return UseInterceptors(new SerializeInterceptor(dto));
+export function SerializeResponse(dto: ClassConstructor, dataDto?: ClassConstructor) {
+  return UseInterceptors(new SerializeInterceptor(dto, dataDto));
 }
 
 export class SerializeInterceptor implements NestInterceptor {
-  constructor(private dto: ClassConstructor) {}
+  constructor(private dto: ClassConstructor, private dataDto?: ClassConstructor) {}
 
   intercept(context: ExecutionContext, next: CallHandler<unknown>): Observable<unknown> {
     return next.handle().pipe(
       map((response: any) => {
-        if (Array.isArray(response)) {
-          return response.map((item) => this.transformDoc(item));
+        const plain = this.toPlain(response);
+
+        // Direct array
+        if (Array.isArray(plain)) {
+          const itemDto = this.dataDto ?? this.dto;
+          return plain.map((item) =>
+            plainToInstance(itemDto, item, {
+              excludeExtraneousValues: true,
+              enableImplicitConversion: true,
+            }),
+          );
         }
 
-        if (response && typeof response === 'object' && Array.isArray(response.data)) {
+        // Wrapper object with data array
+        if (plain && typeof plain === 'object' && Array.isArray(plain.data)) {
+          const itemDto = this.dataDto ?? this.dto;
           return {
-            ...response,
-            data: response.data.map((item: any) => this.transformDoc(item)),
+            ...plain,
+            data: plain.data.map((item: any) =>
+              plainToInstance(itemDto, item, {
+                excludeExtraneousValues: true,
+                enableImplicitConversion: true,
+              }),
+            ),
           };
         }
 
-        if (response && typeof response === 'object' && 'data' in response) {
-          return {
-            ...response,
-            data: response.data ? this.transformDoc(response.data) : response.data,
-          };
+        // Wrapper object with single data object
+        if (plain && typeof plain === 'object' && 'data' in plain) {
+          return plainToInstance(this.dto, plain, {
+            excludeExtraneousValues: true,
+            enableImplicitConversion: true,
+          });
         }
 
-        return this.transformDoc(response);
+        // Single object
+        return plainToInstance(this.dto, plain, {
+          excludeExtraneousValues: true,
+          enableImplicitConversion: true,
+        });
       }),
     );
   }
 
-  private toPlainObject(doc: any): any {
+  private toPlain(doc: any): any {
     if (!doc || typeof doc !== 'object') return doc;
-    if (typeof doc.toObject === 'function') {
-      const plain = doc.toObject({ virtuals: true });
-      if (plain._id) plain._id = plain._id.toString();
-      return plain;
-    }
-    return doc;
-  }
+    if (doc instanceof Date) return doc;
+    if (typeof doc.toObject === 'function') return this.toPlain(doc.toObject({ virtuals: true }));
+    if (Array.isArray(doc)) return doc.map((item) => this.toPlain(item));
 
-  private transformDoc(doc: any): any {
-    return plainToInstance(this.dto, this.toPlainObject(doc));
+    const result: any = {};
+    if (doc._id) result.id = doc._id.toString();
+
+    for (const key of Object.keys(doc)) {
+      if (key === '__v' || key === '_id') continue;
+      const val = doc[key];
+      result[key] = val instanceof Date ? val : this.toPlain(val);
+    }
+
+    return result;
   }
 }

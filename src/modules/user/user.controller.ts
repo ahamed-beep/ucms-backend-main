@@ -21,6 +21,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { CreateUserResponseDto } from './dto/create-user-response.dto';
+import { UserDataDto } from './dto/user-data.dto';
 
 @Controller('admin/users')
 @UseGuards(RolesGuard)
@@ -46,7 +47,7 @@ export class UserController {
   @Get()
   @RequireRole('admin')
   @HttpCode(HttpStatus.OK)
-  @SerializeResponse(GetAllUsersResponseDto)
+  @SerializeResponse(GetAllUsersResponseDto ,UserDataDto)
   async getAllUsers() {
     try {
       return await this.userService.getAllUsers();

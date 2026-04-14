@@ -17,6 +17,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { ActiveGuard } from './common/guards/active.guard';
 import { PaymentModule } from './modules/payment/payment.module';
 import { PaypalService } from './modules/payment/paypal.service';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { PaypalService } from './modules/payment/paypal.service';
     ServicePageModule,
     CloudinaryModule,
     PaymentModule,
+    ContactModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
