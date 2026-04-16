@@ -44,6 +44,7 @@ export class FacultyApplication {
 
   @Prop({ enum: ApplicationStatus, default: ApplicationStatus.PENDING })
   status: ApplicationStatus;
+  
 }
 
 export const FacultyApplicationEntity = SchemaFactory.createForClass(FacultyApplication);

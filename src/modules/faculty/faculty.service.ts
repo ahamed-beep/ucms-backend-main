@@ -58,49 +58,27 @@ export class FacultyApplicationService {
 
 async downloadCv(id: string, res: Response): Promise<void> {
   const application = await this.findById(id);
-  
+
   if (!application.cvUrl) {
     throw new NotFoundException('CV file not found.');
   }
 
-  const { v2: cloudinary } = require('cloudinary');
-  
-  cloudinary.config({
-    cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
-    api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
-    api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
-  });
+  // Since files are uploaded as public, just redirect to the direct URL
+  const cvUrl = application.cvUrl;
 
-  // Extract public ID from cvUrl
-  // URL: https://res.cloudinary.com/ddhxxqkpc/image/upload/v1776366515/faculty-cvs/cv_1776366511384.pdf.pdf
-  // Public ID: faculty-cvs/cv_1776366511384.pdf (remove extension)
-  let publicId = application.cvPublicId;
-  
-  if (!publicId && application.cvUrl) {
-    // Extract from URL
-    const match = application.cvUrl.match(/\/upload\/v\d+\/(.+?)\.pdf/);
-    if (match) {
-      publicId = match[1];
-    }
-  }
-  
-  console.log('Public ID:', publicId);
-  
-  // Generate signed URL with download flag
-  const signedUrl = cloudinary.url(publicId, {
-    resource_type: 'image',
-    type: 'authenticated',
-    sign_url: true,
-    secure: true,
-    expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-    flags: 'attachment',
-    format: 'pdf',
-  });
+  // Determine filename
+  const extension = cvUrl.split('.').pop()?.toLowerCase() ?? 'pdf';
+  const filename = `CV_${application.fullName.replace(/\s+/g, '_')}.${extension}`;
 
-  console.log('Signed URL:', signedUrl);
-  
-  // Redirect to signed URL for download
-  return res.redirect(signedUrl);
+  // Fetch the file and pipe it with proper headers
+  https.get(cvUrl, (fileStream) => {
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    fileStream.pipe(res);
+  }).on('error', (err) => {
+    console.error('CV download error:', err);
+    throw new InternalServerErrorException('Failed to download CV.');
+  });
 }
 async create(
   dto: CreateFacultyApplicationDto,
@@ -166,7 +144,7 @@ async create(
 
 async findAll(): Promise<any[]> {
   const applications = await this.facultyApplicationModel.find().sort({ createdAt: -1 });
-  
+
   return applications.map(app => ({
     id: app._id.toString(),
     fullName: app.fullName,
@@ -181,6 +159,7 @@ async findAll(): Promise<any[]> {
     coverLetter: app.coverLetter,
     cvUrl: app.cvUrl,
     status: app.status,
+    createdAt: (app as any).createdAt, // ← add this
   }));
 }
 
