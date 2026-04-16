@@ -47,10 +47,15 @@ export class PaypalService {
       );
 
       return data.access_token;
-    } catch (error) {
-      this.logger.error('PayPal token fetch failed', error?.response?.data || error);
-      throw new InternalServerErrorException('Payment gateway authentication failed');
-    }
+   } catch (error) {
+const err = error as any;
+this.logger.error('PayPal token fetch failed', {
+  message: err?.message,
+  response: err?.response?.data,
+  status: err?.response?.status,
+});
+  throw new InternalServerErrorException('Payment gateway authentication failed');
+}
   }
 
   async createOrder(
@@ -93,7 +98,7 @@ export class PaypalService {
 
       return data;
     } catch (error) {
-      this.logger.error('PayPal order creation failed', error?.response?.data || error);
+ this.logger.error('PayPal order creation failed', (error as any)?.response?.data || error);
       throw new BadRequestException('Failed to create PayPal order');
     }
   }
@@ -115,7 +120,7 @@ export class PaypalService {
 
       return data;
     } catch (error) {
-      this.logger.error('PayPal capture failed', error?.response?.data || error);
+     this.logger.error('PayPal capture failed', (error as any)?.response?.data || error);
       throw new BadRequestException('Failed to capture PayPal payment');
     }
   }

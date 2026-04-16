@@ -11,6 +11,7 @@ export interface CloudinaryUploadResult {
 @Injectable()
 export class CloudinaryService {
 
+  // Existing method for images
   async uploadFile(
     buffer: Buffer,
     folder: string,
@@ -38,7 +39,39 @@ export class CloudinaryService {
     });
   }
 
-  async deleteFile(publicId: string): Promise<void> {
-    await cloudinary.uploader.destroy(publicId);
+  // NEW METHOD: For CV/files upload
+  async uploadCV(
+    buffer: Buffer,
+    originalName: string,
+    folder: string,
+  ): Promise<CloudinaryUploadResult> {
+    const extension = originalName.split('.').pop()?.toLowerCase();
+    const fileName = `cv_${Date.now()}.${extension}`;
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: 'auto', // Auto detect file type
+          public_id: fileName,
+          access_mode: 'public',
+        },
+        (error, result: UploadApiResponse) => {
+          if (error) {
+            console.error('Cloudinary CV upload error:', error);
+            return reject(error);
+          }
+          resolve({
+            secureUrl: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+      streamifier.createReadStream(buffer).pipe(uploadStream);
+    });
+  }
+
+  async deleteFile(publicId: string, resourceType: string = 'image'): Promise<void> {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
   }
 }

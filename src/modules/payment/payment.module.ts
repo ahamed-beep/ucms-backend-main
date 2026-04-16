@@ -5,6 +5,7 @@ import { PaymentController } from './payment.controller';
 import { PaypalService } from './paypal.service';
 import { ServicePageModule } from '../service/service-page.module';
 import { Payment, PaymentSchema } from './entities/payment.entity';
+import { MailService } from './mail.service';
 
 @Global() 
 @Module({
@@ -15,7 +16,7 @@ import { Payment, PaymentSchema } from './entities/payment.entity';
     ServicePageModule, 
   ],
   controllers: [PaymentController],
-  providers: [PaymentService, PaypalService],
-  exports: [PaymentService, PaypalService], 
+  providers: [PaymentService, PaypalService , MailService],
+  exports: [PaymentService, PaypalService, MailService], 
 })
 export class PaymentModule {}

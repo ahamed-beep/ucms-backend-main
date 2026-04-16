@@ -5,22 +5,28 @@ import {
   Body,
   Param,
   Query,
+  Res,
   UseGuards,
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { PaymentService } from './payment.service';
 import { Public } from 'src/common/decorators/public.decorator';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
 import { CreatePaymentOrderDto } from './dto/Createpaymentorder.dto';
-import { ICapturePaymentResponse, ICreatePaymentOrderResponse } from './interfaces/Payment.interface';
+import { ICreatePaymentOrderResponse } from './interfaces/Payment.interface';
 
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) {}
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @Post('create-order')
@@ -30,7 +36,7 @@ export class PaymentController {
   ): Promise<ICreatePaymentOrderResponse> {
     try {
       return await this.paymentService.createOrder(dto);
-    } catch (error: any) {  // <-- any lagao
+    } catch (error: any) {
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to create payment order');
     }
@@ -40,13 +46,15 @@ export class PaymentController {
   @Get('capture')
   async capturePayment(
     @Query('paymentId') paymentId: string,
-    @Query('token') paypalOrderId: string, 
-  ): Promise<ICapturePaymentResponse> {
+    @Query('token') paypalOrderId: string,
+    @Res() res: Response,
+  ) {
+    const frontendUrl = this.configService.get<string>('APP_URL');
     try {
-      return await this.paymentService.capturePayment(paymentId, paypalOrderId);
-    } catch (error: any) {  // <-- any lagao
-      if (error?.status) throw error;
-      throw new InternalServerErrorException('Failed to capture payment');
+      await this.paymentService.capturePayment(paymentId, paypalOrderId);
+      return res.redirect(`${frontendUrl}/payment-success?paymentId=${paymentId}`);
+    } catch (error: any) {
+      return res.redirect(`${frontendUrl}/payment-failed?paymentId=${paymentId}`);
     }
   }
 
@@ -54,13 +62,13 @@ export class PaymentController {
   @Get('cancel')
   async cancelPayment(
     @Query('paymentId') paymentId: string,
-  ): Promise<{ success: boolean; message: string }> {
+    @Res() res: Response,
+  ) {
+    const frontendUrl = this.configService.get<string>('APP_URL');
     try {
-      return await this.paymentService.cancelPayment(paymentId);
-    } catch (error: any) {  // <-- any lagao
-      if (error?.status) throw error;
-      throw new InternalServerErrorException('Failed to cancel payment');
-    }
+      await this.paymentService.cancelPayment(paymentId);
+    } catch (_) {}
+    return res.redirect(`${frontendUrl}/payment-cancelled?paymentId=${paymentId}`);
   }
 
   @Get()
@@ -70,22 +78,9 @@ export class PaymentController {
     try {
       const payments = await this.paymentService.findAll();
       return { success: true, data: payments };
-    } catch (error: any) {  // <-- any lagao
+    } catch (error: any) {
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to fetch payments');
-    }
-  }
-
-  @Get(':id')
-  @UseGuards(RolesGuard, ActiveGuard)
-  @RequireRole('admin')
-  async findOne(@Param('id') id: string) {
-    try {
-      const payment = await this.paymentService.findById(id);
-      return { success: true, data: payment };
-    } catch (error: any) {  // <-- any lagao
-      if (error?.status) throw error;
-      throw new InternalServerErrorException('Failed to fetch payment');
     }
   }
 
@@ -96,9 +91,43 @@ export class PaymentController {
     try {
       const payments = await this.paymentService.findByServicePage(servicePageId);
       return { success: true, data: payments };
-    } catch (error: any) {  
+    } catch (error: any) {
       if (error?.status) throw error;
       throw new InternalServerErrorException('Failed to fetch payments');
+    }
+  }
+
+  @Public()
+@Get(':id/status')
+async getPaymentStatus(@Param('id') id: string) {
+  try {
+    const payment = await this.paymentService.findById(id);
+    return {
+      success: true,
+      data: {
+        status: payment.status,
+        amount: payment.amount,
+        currency: payment.currency,
+        serviceTitle: payment.serviceTitle,
+        customer: payment.customer,
+      },
+    };
+  } catch (error: any) {
+    if (error?.status) throw error;
+    throw new InternalServerErrorException('Failed to fetch payment status');
+  }
+}
+
+  @Get(':id')
+  @UseGuards(RolesGuard, ActiveGuard)
+  @RequireRole('admin')
+  async findOne(@Param('id') id: string) {
+    try {
+      const payment = await this.paymentService.findById(id);
+      return { success: true, data: payment };
+    } catch (error: any) {
+      if (error?.status) throw error;
+      throw new InternalServerErrorException('Failed to fetch payment');
     }
   }
 }

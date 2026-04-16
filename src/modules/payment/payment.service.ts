@@ -9,13 +9,17 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { ConfigService } from '@nestjs/config';
 import { PaypalService } from './paypal.service';
-
-
-import { ICapturePaymentResponse, ICreatePaymentOrderResponse, IPayPalCaptureResponse, IPayPalCreateOrderResponse } from './interfaces/Payment.interface';
+import {
+  ICapturePaymentResponse,
+  ICreatePaymentOrderResponse,
+  IPayPalCaptureResponse,
+  IPayPalCreateOrderResponse,
+} from './interfaces/Payment.interface';
 import { ServicePageService } from '../service/service-page.service';
 import { CreatePaymentOrderDto } from './dto/Createpaymentorder.dto';
 import { PaymentMethod, PaymentStatus } from './constant/payment.enum';
 import { Payment, PaymentDocument } from './entities/payment.entity';
+import { MailService } from './mail.service';
 
 @Injectable()
 export class PaymentService {
@@ -27,6 +31,7 @@ export class PaymentService {
     private readonly paypalService: PaypalService,
     private readonly servicePageService: ServicePageService,
     private readonly configService: ConfigService,
+    private readonly mailService: MailService, 
   ) {}
 
   async createOrder(dto: CreatePaymentOrderDto): Promise<ICreatePaymentOrderResponse> {
@@ -54,9 +59,9 @@ export class PaymentService {
       throw new InternalServerErrorException('Failed to initiate payment');
     }
 
-    const appUrl = this.configService.getOrThrow<string>('APP_URL');
-    const returnUrl = `${appUrl}/api/payments/capture?paymentId=${payment._id}`;
-    const cancelUrl = `${appUrl}/api/payments/cancel?paymentId=${payment._id}`;
+    const backendUrl = this.configService.getOrThrow<string>('BACKEND_URL');
+    const returnUrl = `${backendUrl}/api/payments/capture?paymentId=${payment._id}`;
+    const cancelUrl = `${backendUrl}/api/payments/cancel?paymentId=${payment._id}`;
 
     const paypalOrder: IPayPalCreateOrderResponse = await this.paypalService.createOrder(
       amount,
@@ -110,6 +115,37 @@ export class PaymentService {
       payment.paypalCaptureId = capture.id;
       await payment.save();
       this.logger.log(`Payment completed: ${paymentId}`);
+
+      const emailData = {
+        paymentId:       payment._id.toString(),
+        serviceTitle:    payment.serviceTitle,
+        amount:          payment.amount,
+        currency:        payment.currency,
+        paypalOrderId:   payment.paypalOrderId,
+        paypalCaptureId: capture.id,
+customerName: [payment.customer?.firstName, payment.customer?.lastName].filter(Boolean).join(' ') || 'Customer',
+        customerEmail:   payment.customer?.email ?? '',
+        customerPhone:   payment.customer?.phone ?? '',
+        paymentDate:     new Date().toLocaleString('en-PK', {
+          dateStyle: 'long',
+          timeStyle: 'short',
+          timeZone: 'Asia/Karachi',
+        }),
+      };
+
+      Promise.allSettled([
+        this.mailService.sendPaymentSuccessToUser(emailData),
+        this.mailService.sendPaymentSuccessToAdmin(emailData),
+      ]).then((results) => {
+        results.forEach((result, i) => {
+          if (result.status === 'rejected') {
+            this.logger.warn(
+              `Email ${i === 0 ? 'to user' : 'to admin'} failed: ${result.reason}`,
+            );
+          }
+        });
+      });
+
     } else {
       payment.status = PaymentStatus.FAILED;
       await payment.save();
@@ -171,7 +207,7 @@ export class PaymentService {
   private buildCaptureResponse(payment: PaymentDocument): ICapturePaymentResponse {
     return {
       success: true,
-   paymentId: payment._id.toString(),
+      paymentId: payment._id.toString(),
       status: payment.status,
       amount: payment.amount,
       currency: payment.currency,
