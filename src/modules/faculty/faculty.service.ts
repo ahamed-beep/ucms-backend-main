@@ -13,7 +13,6 @@ import { Response } from 'express';
 
 import { CreateFacultyApplicationDto } from './dto/create-faculty-application.dto';
 import { UpdateFacultyStatusDto } from './dto/update-faculty-status.dto';
-import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { FacultyApplication, FacultyApplicationDocument } from './entities/faculty-application.entity';
 import { ApplicationStatus } from './enums/faculty-application.enum';
 import { adminNotificationTemplate } from './templates/admin-notification.template';
@@ -34,7 +33,6 @@ export class FacultyApplicationService {
   constructor(
     @InjectModel(FacultyApplication.name)
     private readonly facultyApplicationModel: Model<FacultyApplicationDocument>,
-    private readonly cloudinaryService: CloudinaryService,
     private readonly configService: ConfigService,
   ) {
     this.transporter = nodemailer.createTransport({
@@ -56,145 +54,86 @@ export class FacultyApplicationService {
     return application;
   }
 
-async downloadCv(id: string, res: Response): Promise<void> {
-  const application = await this.findById(id);
+  async downloadCv(id: string, res: Response): Promise<void> {
+    const application = await this.findById(id);
 
-  if (!application.cvUrl) {
-    throw new NotFoundException('CV file not found.');
+    if (!application.cvUrl) {
+      throw new NotFoundException('CV file not found.');
+    }
+
+    const extension = application.cvUrl.split('.').pop()?.toLowerCase() ?? 'pdf';
+    const filename = `CV_${application.fullName.replace(/\s+/g, '_')}.${extension}`;
+
+    https
+      .get(application.cvUrl, (fileStream) => {
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+        fileStream.pipe(res);
+      })
+      .on('error', () => {
+        throw new InternalServerErrorException('Failed to download CV.');
+      });
   }
 
-  // Since files are uploaded as public, just redirect to the direct URL
-  const cvUrl = application.cvUrl;
+  async create(
+    dto: CreateFacultyApplicationDto,
+    file: Express.Multer.File,
+  ): Promise<FacultyApplicationDocument> {
+    if (!file) {
+      throw new BadRequestException('CV/Resume file is required.');
+    }
 
-  // Determine filename
-  const extension = cvUrl.split('.').pop()?.toLowerCase() ?? 'pdf';
-  const filename = `CV_${application.fullName.replace(/\s+/g, '_')}.${extension}`;
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Invalid file type. Only PDF, DOC, and DOCX are allowed.',
+      );
+    }
 
-  // Fetch the file and pipe it with proper headers
-  https.get(cvUrl, (fileStream) => {
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Type', 'application/octet-stream');
-    fileStream.pipe(res);
-  }).on('error', (err) => {
-    console.error('CV download error:', err);
-    throw new InternalServerErrorException('Failed to download CV.');
-  });
-}
-async create(
-  dto: CreateFacultyApplicationDto,
-  file: Express.Multer.File,
-): Promise<any> {
-  if (!file) {
-    throw new BadRequestException('CV/Resume file is required.');
+    const { secureUrl, publicId } = await this.uploadCv(file);
+
+    const application = await this.facultyApplicationModel.create({
+      fullName: dto.fullName,
+      email: dto.email,
+      phone: dto.phone,
+      linkedin: dto.linkedin || null,
+      highestQualification: dto.highestQualification,
+      yearsOfExperience: dto.yearsOfExperience,
+      institutionAffiliation: dto.institutionAffiliation,
+      currentJobPosition: dto.currentJobPosition,
+      previousExperience: dto.previousExperience,
+      coverLetter: dto.coverLetter,
+      cvUrl: secureUrl,
+      cvPublicId: publicId,
+      status: ApplicationStatus.PENDING,
+    });
+
+    await this.sendSubmissionEmails(application);
+
+    return application;
   }
 
-  if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-    throw new BadRequestException(
-      'Invalid file type. Only PDF, DOC, and DOCX are allowed.',
+  async findAll(): Promise<FacultyApplicationDocument[]> {
+    return this.facultyApplicationModel.find().sort({ createdAt: -1 });
+  }
+
+  async updateStatus(
+    id: string,
+    dto: UpdateFacultyStatusDto,
+  ): Promise<FacultyApplicationDocument> {
+    const application = await this.facultyApplicationModel.findByIdAndUpdate(
+      id,
+      { status: dto.status },
+      { new: true },
     );
+
+    if (!application) {
+      throw new NotFoundException('Faculty application not found.');
+    }
+
+    await this.sendStatusEmail(application);
+
+    return application;
   }
-
-  let cvUrl: string;
-  let cvPublicId: string;
-
-  try {
-    const uploaded = await this.uploadCv(file);
-    cvUrl = uploaded.secureUrl;
-    cvPublicId = uploaded.publicId;
-  } catch (error) {
-    console.error('Upload error:', error);
-    throw new InternalServerErrorException('Failed to upload CV. Please try again.');
-  }
-
-  const application = await this.facultyApplicationModel.create({
-    fullName: dto.fullName,
-    email: dto.email,
-    phone: dto.phone,
-    linkedin: dto.linkedin || null,
-    highestQualification: dto.highestQualification,
-    yearsOfExperience: dto.yearsOfExperience,
-    institutionAffiliation: dto.institutionAffiliation,
-    currentJobPosition: dto.currentJobPosition,
-    previousExperience: dto.previousExperience,
-    coverLetter: dto.coverLetter,
-    cvUrl: cvUrl,
-    cvPublicId: cvPublicId,
-    status: ApplicationStatus.PENDING,
-  });
-
-  await this.sendSubmissionEmails(application);
-
-  // Return without createdAt/updatedAt
-  return {
-    id: application._id.toString(),
-    fullName: application.fullName,
-    email: application.email,
-    phone: application.phone,
-    linkedin: application.linkedin || null,
-    highestQualification: application.highestQualification,
-    yearsOfExperience: application.yearsOfExperience,
-    institutionAffiliation: application.institutionAffiliation,
-    currentJobPosition: application.currentJobPosition,
-    previousExperience: application.previousExperience,
-    coverLetter: application.coverLetter,
-    cvUrl: application.cvUrl,
-    status: application.status,
-  };
-}
-
-async findAll(): Promise<any[]> {
-  const applications = await this.facultyApplicationModel.find().sort({ createdAt: -1 });
-
-  return applications.map(app => ({
-    id: app._id.toString(),
-    fullName: app.fullName,
-    email: app.email,
-    phone: app.phone,
-    linkedin: app.linkedin || null,
-    highestQualification: app.highestQualification,
-    yearsOfExperience: app.yearsOfExperience,
-    institutionAffiliation: app.institutionAffiliation,
-    currentJobPosition: app.currentJobPosition,
-    previousExperience: app.previousExperience,
-    coverLetter: app.coverLetter,
-    cvUrl: app.cvUrl,
-    status: app.status,
-    createdAt: (app as any).createdAt, // ← add this
-  }));
-}
-
- async updateStatus(
-  id: string,
-  dto: UpdateFacultyStatusDto,
-): Promise<any> {
-  const application = await this.facultyApplicationModel.findByIdAndUpdate(
-    id,
-    { status: dto.status },
-    { new: true },
-  );
-
-  if (!application) {
-    throw new NotFoundException('Faculty application not found.');
-  }
-
-  await this.sendStatusEmail(application);
-
-  return {
-    id: application._id.toString(),
-    fullName: application.fullName,
-    email: application.email,
-    phone: application.phone,
-    linkedin: application.linkedin || null,
-    highestQualification: application.highestQualification,
-    yearsOfExperience: application.yearsOfExperience,
-    institutionAffiliation: application.institutionAffiliation,
-    currentJobPosition: application.currentJobPosition,
-    previousExperience: application.previousExperience,
-    coverLetter: application.coverLetter,
-    cvUrl: application.cvUrl,
-    status: application.status,
-  };
-}
 
   async remove(id: string): Promise<void> {
     const application = await this.facultyApplicationModel.findById(id);
@@ -204,12 +143,8 @@ async findAll(): Promise<any[]> {
     }
 
     if (application.cvPublicId) {
-      try {
-        const { v2: cloudinary } = require('cloudinary');
-        await cloudinary.uploader.destroy(application.cvPublicId, { resource_type: 'auto' });
-      } catch (error) {
-        console.error('Failed to delete from Cloudinary:', error);
-      }
+      const { v2: cloudinary } = require('cloudinary');
+      await cloudinary.uploader.destroy(application.cvPublicId, { resource_type: 'auto' });
     }
 
     await this.facultyApplicationModel.findByIdAndDelete(id);
@@ -221,15 +156,14 @@ async findAll(): Promise<any[]> {
     return new Promise((resolve, reject) => {
       const { v2: cloudinary } = require('cloudinary');
       const streamifier = require('streamifier');
-      
+
       cloudinary.config({
         cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
         api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
         api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
       });
 
-      const originalName = file.originalname;
-      const extension = originalName.split('.').pop()?.toLowerCase();
+      const extension = file.originalname.split('.').pop()?.toLowerCase();
       const fileName = `cv_${Date.now()}.${extension}`;
 
       const stream = cloudinary.uploader.upload_stream(
@@ -240,10 +174,7 @@ async findAll(): Promise<any[]> {
           access_mode: 'public',
         },
         (error: any, result: any) => {
-          if (error) {
-            console.error('Cloudinary upload error:', error);
-            return reject(error);
-          }
+          if (error) return reject(new InternalServerErrorException('Failed to upload CV.'));
           resolve({ secureUrl: result.secure_url, publicId: result.public_id });
         },
       );
