@@ -20,6 +20,7 @@ import { PaypalService } from './modules/payment/paypal.service';
 import { ContactModule } from './modules/contact/contact.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
 import { ConsultationModule } from './modules/consultation/consultation.module';
+import { FacultyApplicationModule } from './modules/faculty/faculty.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { ConsultationModule } from './modules/consultation/consultation.module';
     ContactModule,
     GalleryModule,
     ConsultationModule,
+    FacultyApplicationModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
