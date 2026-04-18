@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
+  HttpException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ServicePageService } from './service-page.service';
@@ -35,7 +36,7 @@ export class ServicePageController {
   constructor(private readonly servicePageService: ServicePageService) {}
 
   @Post()
-    @RequireRole('admin')
+  @RequireRole('admin')
   @UseGuards(RolesGuard, ActiveGuard)
   @UseInterceptors(FileInterceptor('icon', multerMemoryOptions))
   @SerializeResponse(ServicePageResponseDto)
@@ -47,8 +48,8 @@ export class ServicePageController {
     try {
       const page: ServicePageDocument = await this.servicePageService.create(dto, icon);
       return { success: true, data: page };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to create service page');
     }
   }
@@ -61,8 +62,8 @@ export class ServicePageController {
     try {
       const pages: ServicePageDocument[] = await this.servicePageService.findAllAdmin();
       return { success: true, data: pages };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to fetch service pages');
     }
   }
@@ -74,8 +75,8 @@ export class ServicePageController {
     try {
       const pages: ServicePageDocument[] = await this.servicePageService.findAll();
       return { success: true, data: pages };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to fetch service pages');
     }
   }
@@ -87,8 +88,8 @@ export class ServicePageController {
     try {
       const page: ServicePageDocument = await this.servicePageService.findBySlug(slug);
       return { success: true, data: page };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to fetch service page');
     }
   }
@@ -106,8 +107,8 @@ export class ServicePageController {
     try {
       const page: ServicePageDocument = await this.servicePageService.update(id, dto, icon);
       return { success: true, data: page };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to update service page');
     }
   }
@@ -120,8 +121,8 @@ export class ServicePageController {
     try {
       const page: ServicePageDocument = await this.servicePageService.toggleActive(id);
       return { success: true, data: page };
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to toggle service page');
     }
   }
@@ -132,8 +133,8 @@ export class ServicePageController {
   async remove(@Param('id') id: string): Promise<IDeleteResponse> {
     try {
       return await this.servicePageService.remove(id);
-    } catch (error) {
-      if (error?.status) throw error;
+    } catch (error: unknown) {
+      if (error instanceof HttpException) throw error;
       throw new InternalServerErrorException('Failed to delete service page');
     }
   }

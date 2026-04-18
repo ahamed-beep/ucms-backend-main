@@ -24,7 +24,6 @@ export class SerializeInterceptor implements NestInterceptor {
       map((response: any) => {
         const plain = this.toPlain(response);
 
-        // Direct array
         if (Array.isArray(plain)) {
           const itemDto = this.dataDto ?? this.dto;
           return plain.map((item) =>
@@ -35,7 +34,6 @@ export class SerializeInterceptor implements NestInterceptor {
           );
         }
 
-        // Wrapper object with data array
         if (plain && typeof plain === 'object' && Array.isArray(plain.data)) {
           const itemDto = this.dataDto ?? this.dto;
           return {
@@ -49,7 +47,6 @@ export class SerializeInterceptor implements NestInterceptor {
           };
         }
 
-        // Wrapper object with single data object
         if (plain && typeof plain === 'object' && 'data' in plain) {
           return plainToInstance(this.dto, plain, {
             excludeExtraneousValues: true,
@@ -57,7 +54,6 @@ export class SerializeInterceptor implements NestInterceptor {
           });
         }
 
-        // Single object
         return plainToInstance(this.dto, plain, {
           excludeExtraneousValues: true,
           enableImplicitConversion: true,
