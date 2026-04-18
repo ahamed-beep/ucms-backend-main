@@ -21,6 +21,8 @@ import { ContactModule } from './modules/contact/contact.module';
 import { GalleryModule } from './modules/gallery/gallery.module';
 import { ConsultationModule } from './modules/consultation/consultation.module';
 import { FacultyApplicationModule } from './modules/faculty/faculty.module';
+import { EventModule } from './modules/event/event.module';
+import { RegistrationModule } from './modules/registration/registration.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { FacultyApplicationModule } from './modules/faculty/faculty.module';
     GalleryModule,
     ConsultationModule,
     FacultyApplicationModule,
+    EventModule,
+    RegistrationModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
