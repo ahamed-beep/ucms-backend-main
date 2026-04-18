@@ -23,6 +23,9 @@ import { ConsultationModule } from './modules/consultation/consultation.module';
 import { FacultyApplicationModule } from './modules/faculty/faculty.module';
 import { EventModule } from './modules/event/event.module';
 import { RegistrationModule } from './modules/registration/registration.module';
+import { AdmissionModule } from './modules/admission/admission.module';
+import { InquiryModule } from './modules/inquiry/inquiry.module';
+import { MailModule } from './modules/mail/mail.module';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { RegistrationModule } from './modules/registration/registration.module';
     FacultyApplicationModule,
     EventModule,
     RegistrationModule,
+    AdmissionModule,
+    InquiryModule,
+    MailModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
