@@ -10,14 +10,12 @@ export interface CloudinaryUploadResult {
 
 @Injectable()
 export class CloudinaryService {
-
-  // Existing method for images
   async uploadFile(
     buffer: Buffer,
     folder: string,
   ): Promise<CloudinaryUploadResult> {
     const webpBuffer = await sharp(buffer)
-      .webp({ quality: 85 })  
+      .webp({ quality: 85 })
       .toBuffer();
 
     return new Promise((resolve, reject) => {
@@ -25,7 +23,7 @@ export class CloudinaryService {
         {
           folder,
           resource_type: 'image',
-          format: 'webp',  
+          format: 'webp',
         },
         (error, result: UploadApiResponse) => {
           if (error) return reject(error);
@@ -39,7 +37,6 @@ export class CloudinaryService {
     });
   }
 
-  // NEW METHOD: For CV/files upload
   async uploadCV(
     buffer: Buffer,
     originalName: string,
@@ -52,15 +49,40 @@ export class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder,
-          resource_type: 'auto', // Auto detect file type
+          resource_type: 'auto',
           public_id: fileName,
           access_mode: 'public',
         },
         (error, result: UploadApiResponse) => {
-          if (error) {
-            console.error('Cloudinary CV upload error:', error);
-            return reject(error);
-          }
+          if (error) return reject(error);
+          resolve({
+            secureUrl: result.secure_url,
+            publicId: result.public_id,
+          });
+        },
+      );
+      streamifier.createReadStream(buffer).pipe(uploadStream);
+    });
+  }
+
+  async uploadVideo(
+    buffer: Buffer,
+    originalName: string,
+    folder: string,
+  ): Promise<CloudinaryUploadResult> {
+    const extension = originalName.split('.').pop()?.toLowerCase();
+    const fileName = `video_${Date.now()}.${extension}`;
+
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder,
+          resource_type: 'video',
+          public_id: fileName,
+          access_mode: 'public',
+        },
+        (error, result: UploadApiResponse) => {
+          if (error) return reject(error);
           resolve({
             secureUrl: result.secure_url,
             publicId: result.public_id,

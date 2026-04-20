@@ -26,6 +26,9 @@ import { RegistrationModule } from './modules/registration/registration.module';
 import { AdmissionModule } from './modules/admission/admission.module';
 import { InquiryModule } from './modules/inquiry/inquiry.module';
 import { MailModule } from './modules/mail/mail.module';
+import { DestinationModule } from './modules/destination/destination.module';
+import { TestimonialsModule } from './modules/testimonials/testimonials.module';
+import { VideoTestimonialsModule } from './modules/video-testimonials/video-testimonials.module';
 
 @Module({
   imports: [
@@ -51,6 +54,9 @@ import { MailModule } from './modules/mail/mail.module';
     AdmissionModule,
     InquiryModule,
     MailModule,
+    DestinationModule,
+    TestimonialsModule,
+    VideoTestimonialsModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
