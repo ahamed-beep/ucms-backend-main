@@ -29,6 +29,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { DestinationModule } from './modules/destination/destination.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { VideoTestimonialsModule } from './modules/video-testimonials/video-testimonials.module';
+import { BlogModule } from './modules/blog/blog.module';
 
 @Module({
   imports: [
@@ -57,6 +58,7 @@ import { VideoTestimonialsModule } from './modules/video-testimonials/video-test
     DestinationModule,
     TestimonialsModule,
     VideoTestimonialsModule,
+    BlogModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
