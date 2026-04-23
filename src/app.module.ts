@@ -30,6 +30,10 @@ import { DestinationModule } from './modules/destination/destination.module';
 import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { VideoTestimonialsModule } from './modules/video-testimonials/video-testimonials.module';
 import { BlogModule } from './modules/blog/blog.module';
+import { QuizModule } from './modules/quiz/quiz.module';
+import { VideoLibraryModule } from './modules/video-library/video-library.module';
+import { IeltsResourceModule } from './modules/ielts-resource/ielts-resource.module';
+import { UpcomingClassModule } from './modules/upcoming-class/upcoming-class.module';
 
 @Module({
   imports: [
@@ -59,6 +63,10 @@ import { BlogModule } from './modules/blog/blog.module';
     TestimonialsModule,
     VideoTestimonialsModule,
     BlogModule,
+    QuizModule,
+    VideoLibraryModule,
+    IeltsResourceModule,
+    UpcomingClassModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
