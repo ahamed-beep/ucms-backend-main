@@ -38,6 +38,8 @@ import { LecturesModule } from './modules/lecture/lecture.module';
 import { ResourcesModule } from './modules/resource/resource.module';
 import { MaterialsModule } from './modules/material/material.module';
 import { ExercisesModule } from './modules/exercise/exercise.module';
+import { LectureProgressModule } from './modules/lecture-progress/lecture-progress.module';
+import { InstructorModule } from './modules/instructor/instructor.module';
 
 @Module({
   imports: [
@@ -77,6 +79,8 @@ import { ExercisesModule } from './modules/exercise/exercise.module';
     ResourcesModule,
     MaterialsModule,
     ExercisesModule,
+    LectureProgressModule,
+    InstructorModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [

@@ -20,41 +20,42 @@ export class MaterialService implements IMaterialService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async createMaterial(
-    courseId: string,
-    dto: CreateMaterialDto,
-    fileBuffer: Buffer,
-    fileName: string,
-  ): Promise<MaterialDocument> {
-    try {
-      let uploaded: { secureUrl: string; publicId: string };
+async createMaterial(
+  courseId: string,
+  dto: CreateMaterialDto,
+  fileBuffer: Buffer,
+  fileName: string,
+): Promise<MaterialDocument> {
+  try {
+    let uploaded: { secureUrl: string; publicId: string };
 
-      if (dto.type === MaterialType.VIDEO) {
-        uploaded = await this.cloudinaryService.uploadVideo(
-          fileBuffer,
-          fileName,
-          'courses/materials/videos',
-        );
-      } else {
-        uploaded = await this.cloudinaryService.uploadCV(
-          fileBuffer,
-          fileName,
-          'courses/materials/docs',
-        );
-      }
-
-      const material = new this.materialModel({
-        ...dto,
-        courseId,
-        fileUrl: uploaded.secureUrl,
-        filePublicId: uploaded.publicId,
-      });
-
-      return await material.save();
-    } catch {
-      throw new InternalServerErrorException('Failed to create material');
+    if (dto.type === MaterialType.VIDEO) {
+      uploaded = await this.cloudinaryService.uploadVideo(
+        fileBuffer,
+        fileName,
+        'courses/materials/videos',
+      );
+    } else {
+      uploaded = await this.cloudinaryService.uploadCV(
+        fileBuffer,
+        fileName,
+        'courses/materials/docs',
+      );
     }
+
+    const material = new this.materialModel({
+      ...dto,
+      courseId,
+      fileUrl: uploaded.secureUrl,
+      filePublicId: uploaded.publicId,
+    });
+
+    return await material.save();
+  } catch (err) {          
+    console.error('createMaterial raw error:', err);
+    throw new InternalServerErrorException('Failed to create material');
   }
+}
 
   async getMaterialsByCourse(courseId: string): Promise<MaterialDocument[]> {
     try {

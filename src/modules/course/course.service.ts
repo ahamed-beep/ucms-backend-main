@@ -1,16 +1,15 @@
 import {
   Injectable,
   NotFoundException,
-  ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Course, CourseDocument } from './entities/course.entity';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { ICourseService } from './interfaces/course.service.interface';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { Course, CourseDocument } from './entities/course.entity';
 
 @Injectable()
 export class CourseService implements ICourseService {
@@ -26,12 +25,6 @@ export class CourseService implements ICourseService {
     thumbnailName?: string,
   ): Promise<CourseDocument> {
     try {
-      const existing = await this.courseModel.findOne({ slug: dto.slug });
-
-      if (existing) {
-        throw new ConflictException(`Course with slug "${dto.slug}" already exists`);
-      }
-
       const course = new this.courseModel(dto);
 
       if (thumbnailBuffer && thumbnailName) {
@@ -44,10 +37,9 @@ export class CourseService implements ICourseService {
       }
 
       return await course.save();
-    } catch (error) {
-      if (error instanceof ConflictException) throw error;
-      throw new InternalServerErrorException('Failed to create course');
-    }
+ } catch (error) {
+  throw new InternalServerErrorException('Failed to create course');
+}
   }
 
   async getAllCourses(): Promise<CourseDocument[]> {
@@ -58,22 +50,20 @@ export class CourseService implements ICourseService {
     }
   }
 
-  async getCourseBySlug(slug: string): Promise<CourseDocument> {
+  async getCourseById(id: string): Promise<CourseDocument> {
     try {
       const course = await this.courseModel
-        .findOne({ slug })
+        .findById(id)
         .populate({
           path: 'courseModules',
-          populate: [
-            { path: 'lectures' },
-            { path: 'resources' },
-          ],
+          populate: [{ path: 'lectures' }, { path: 'resources' }],
         })
         .populate('materials')
-        .populate('exercises');
+        .populate('exercises')
+          .populate('instructorId');
 
       if (!course) {
-        throw new NotFoundException(`Course with slug "${slug}" not found`);
+        throw new NotFoundException(`Course not found`);
       }
 
       return course;
@@ -93,7 +83,7 @@ export class CourseService implements ICourseService {
       const course = await this.courseModel.findById(id);
 
       if (!course) {
-        throw new NotFoundException(`Course with id "${id}" not found`);
+        throw new NotFoundException(`Course not found`);
       }
 
       if (thumbnailBuffer && thumbnailName) {
@@ -121,7 +111,7 @@ export class CourseService implements ICourseService {
       const course = await this.courseModel.findById(id);
 
       if (!course) {
-        throw new NotFoundException(`Course with id "${id}" not found`);
+        throw new NotFoundException(`Course not found`);
       }
 
       if (course.thumbnailPublicId) {

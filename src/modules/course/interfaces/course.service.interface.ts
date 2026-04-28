@@ -10,8 +10,7 @@ export interface ICourseService {
   ): Promise<CourseDocument>;
 
   getAllCourses(): Promise<CourseDocument[]>;
-
-  getCourseBySlug(slug: string): Promise<CourseDocument>;
+  getCourseById(id: string): Promise<CourseDocument>;
 
   updateCourse(
     id: string,

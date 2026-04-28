@@ -3,9 +3,6 @@ import { CourseStatus } from '../enums/course.enum';
 
 export class CreateCourseDto {
   @IsString()
-  slug: string;
-
-  @IsString()
   title: string;
 
   @IsString()

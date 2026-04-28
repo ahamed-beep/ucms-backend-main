@@ -1,12 +1,9 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { CourseStatus } from '../enums/course.enum';
 
 export class CourseResponseDto {
   @Expose()
   id: string;
-
-  @Expose()
-  slug: string;
 
   @Expose()
   title: string;
