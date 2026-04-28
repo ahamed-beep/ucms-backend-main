@@ -1,4 +1,3 @@
-// app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -12,7 +11,6 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ServicePageModule } from './modules/service/service-page.module';
 import { ServicePageController } from './modules/service/service-page.controller';
-import { ServicePageService } from './modules/service/service-page.service';
 import { RolesGuard } from './common/guards/roles.guard';
 import { ActiveGuard } from './common/guards/active.guard';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -34,6 +32,14 @@ import { QuizModule } from './modules/quiz/quiz.module';
 import { VideoLibraryModule } from './modules/video-library/video-library.module';
 import { IeltsResourceModule } from './modules/ielts-resource/ielts-resource.module';
 import { UpcomingClassModule } from './modules/upcoming-class/upcoming-class.module';
+import { CoursesModule } from './modules/course/course.module';
+import { CourseModuleNestModule } from './modules/course-module/course-module.module';
+import { LecturesModule } from './modules/lecture/lecture.module';
+import { ResourcesModule } from './modules/resource/resource.module';
+import { MaterialsModule } from './modules/material/material.module';
+import { ExercisesModule } from './modules/exercise/exercise.module';
+import { LectureProgressModule } from './modules/lecture-progress/lecture-progress.module';
+import { InstructorModule } from './modules/instructor/instructor.module';
 
 @Module({
   imports: [
@@ -67,13 +73,22 @@ import { UpcomingClassModule } from './modules/upcoming-class/upcoming-class.mod
     VideoLibraryModule,
     IeltsResourceModule,
     UpcomingClassModule,
+    CoursesModule,
+    CourseModuleNestModule,
+    LecturesModule,
+    ResourcesModule,
+    MaterialsModule,
+    ExercisesModule,
+    LectureProgressModule,
+    InstructorModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
-  { provide: APP_GUARD, useClass: RolesGuard },   
-  { provide: APP_GUARD, useClass: ActiveGuard }, PaypalService,
+    { provide: APP_GUARD, useClass: RolesGuard },
+    { provide: APP_GUARD, useClass: ActiveGuard },
+    PaypalService,
   ],
 })
 export class AppModule {}

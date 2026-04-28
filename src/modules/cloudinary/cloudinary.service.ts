@@ -37,33 +37,35 @@ export class CloudinaryService {
     });
   }
 
-  async uploadCV(
-    buffer: Buffer,
-    originalName: string,
-    folder: string,
-  ): Promise<CloudinaryUploadResult> {
-    const extension = originalName.split('.').pop()?.toLowerCase();
-    const fileName = `cv_${Date.now()}.${extension}`;
+async uploadCV(
+  buffer: Buffer,
+  originalName: string,
+  folder: string,
+): Promise<CloudinaryUploadResult> {
+  const extension = originalName.split('.').pop()?.toLowerCase();
+  const fileName = `cv_${Date.now()}.${extension}`;
 
-    return new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: 'auto',
-          public_id: fileName,
-          access_mode: 'public',
-        },
-        (error, result: UploadApiResponse) => {
-          if (error) return reject(error);
-          resolve({
-            secureUrl: result.secure_url,
-            publicId: result.public_id,
-          });
-        },
-      );
-      streamifier.createReadStream(buffer).pipe(uploadStream);
-    });
-  }
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder,
+        resource_type: 'raw',        
+        public_id: fileName,
+        access_mode: 'public',
+        use_filename: true,           
+        unique_filename: false,
+      },
+      (error, result: UploadApiResponse) => {
+        if (error) return reject(error);
+        resolve({
+          secureUrl: result.secure_url,
+          publicId: result.public_id,
+        });
+      },
+    );
+    streamifier.createReadStream(buffer).pipe(uploadStream);
+  });
+}
 
   async uploadVideo(
     buffer: Buffer,
