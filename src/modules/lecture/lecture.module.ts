@@ -4,10 +4,16 @@ import { Lecture, LectureSchema } from './entities/lecture.entity';
 import { LecturesController } from './lecture.controller';
 import { LectureService } from './lecture.service';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
+import { Enrollment, EnrollmentSchema } from '../enrollment/entities/enrollment.entity';
+import { CourseModule, CourseModuleSchema } from '../course-module/entities/course-module.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Lecture.name, schema: LectureSchema }]),
+    MongooseModule.forFeature([
+      { name: Lecture.name, schema: LectureSchema },
+      { name: Enrollment.name, schema: EnrollmentSchema },
+      { name: CourseModule.name, schema: CourseModuleSchema },
+    ]),
     CloudinaryModule,
   ],
   controllers: [LecturesController],

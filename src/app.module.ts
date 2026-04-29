@@ -40,6 +40,7 @@ import { MaterialsModule } from './modules/material/material.module';
 import { ExercisesModule } from './modules/exercise/exercise.module';
 import { LectureProgressModule } from './modules/lecture-progress/lecture-progress.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
+import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { InstructorModule } from './modules/instructor/instructor.module';
     ExercisesModule,
     LectureProgressModule,
     InstructorModule,
+    EnrollmentModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [

@@ -22,6 +22,7 @@ import { SerializeResponse } from 'src/common/interceptors/serialize.interceptor
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
+import { ModuleEnrollmentGuard } from 'src/common/guards/module-enrollment.guard';
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -67,6 +68,7 @@ export class LecturesController {
 
   @Get()
   @RequireRole('admin', 'student')
+  @UseGuards(ModuleEnrollmentGuard)
   async getLecturesByModule(@Param('moduleId') moduleId: string) {
     try {
       return await this.lectureService.getLecturesByModule(moduleId);
@@ -78,6 +80,7 @@ export class LecturesController {
 
   @Get(':id')
   @RequireRole('admin', 'student')
+  @UseGuards(ModuleEnrollmentGuard)
   async getLectureById(@Param('id') id: string) {
     try {
       return await this.lectureService.getLectureById(id);
