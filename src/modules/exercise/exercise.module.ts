@@ -3,9 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Exercise, ExerciseSchema } from './entities/exercise.entity';
 import { ExercisesController } from './exercise.controller';
 import { ExerciseService } from './exercise.service';
+import { EnrollmentModule } from '../enrollment/enrollment.module';
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Exercise.name, schema: ExerciseSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Exercise.name, schema: ExerciseSchema }]),
+    EnrollmentModule,
+  ],
   controllers: [ExercisesController],
   providers: [ExerciseService],
   exports: [ExerciseService],

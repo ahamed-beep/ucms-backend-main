@@ -22,6 +22,7 @@ import { SerializeResponse } from 'src/common/interceptors/serialize.interceptor
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
+import { ModuleEnrollmentGuard } from 'src/common/guards/module-enrollment.guard';
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -34,7 +35,7 @@ export class ResourcesController {
   constructor(private readonly resourceService: ResourceService) {}
 
   @Post()
-    @RequireRole('admin')
+  @RequireRole('admin')
   @UseInterceptors(FileInterceptor('file', multerMemoryOptions))
   async createResource(
     @Param('moduleId') moduleId: string,
@@ -55,7 +56,8 @@ export class ResourcesController {
   }
 
   @Get()
-    @RequireRole('admin', 'student')
+  @RequireRole('admin', 'student')
+  @UseGuards(ModuleEnrollmentGuard)
   async getResourcesByModule(@Param('moduleId') moduleId: string) {
     try {
       return await this.resourceService.getResourcesByModule(moduleId);
@@ -66,7 +68,8 @@ export class ResourcesController {
   }
 
   @Get(':id')
-    @RequireRole('admin', 'student')
+  @RequireRole('admin', 'student')
+  @UseGuards(ModuleEnrollmentGuard)
   async getResourceById(@Param('id') id: string) {
     try {
       return await this.resourceService.getResourceById(id);
@@ -77,8 +80,7 @@ export class ResourcesController {
   }
 
   @Patch(':id')
-    @RequireRole('admin')
-  @UseInterceptors(FileInterceptor('file', multerMemoryOptions))
+  @RequireRole('admin')
   async updateResource(
     @Param('id') id: string,
     @Body() dto: UpdateResourceDto,
@@ -98,7 +100,7 @@ export class ResourcesController {
   }
 
   @Delete(':id')
-    @RequireRole('admin')
+  @RequireRole('admin')
   async deleteResource(@Param('id') id: string) {
     try {
       return await this.resourceService.deleteResource(id);

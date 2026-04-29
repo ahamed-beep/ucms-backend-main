@@ -18,6 +18,7 @@ import { SerializeResponse } from 'src/common/interceptors/serialize.interceptor
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
+import { EnrollmentGuard } from 'src/common/guards/enrollment.guard';
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -30,7 +31,7 @@ export class CourseModuleController {
   constructor(private readonly courseModuleService: CourseModuleService) {}
 
   @Post()
-     @RequireRole('admin')
+  @RequireRole('admin')
   async createModule(
     @Param('courseId') courseId: string,
     @Body() dto: CreateCourseModuleDto,
@@ -44,7 +45,8 @@ export class CourseModuleController {
   }
 
   @Get()
-     @RequireRole('admin','student')
+  @RequireRole('admin', 'student')
+  @UseGuards(EnrollmentGuard)
   async getModulesByCourse(@Param('courseId') courseId: string) {
     try {
       return await this.courseModuleService.getModulesByCourse(courseId);
@@ -55,7 +57,8 @@ export class CourseModuleController {
   }
 
   @Get(':id')
-   @RequireRole('admin','student')
+  @RequireRole('admin', 'student')
+  @UseGuards(EnrollmentGuard)
   async getModuleById(@Param('id') id: string) {
     try {
       return await this.courseModuleService.getModuleById(id);
@@ -66,7 +69,7 @@ export class CourseModuleController {
   }
 
   @Patch(':id')
-     @RequireRole('admin')
+  @RequireRole('admin')
   async updateModule(
     @Param('id') id: string,
     @Body() dto: UpdateCourseModuleDto,
@@ -80,7 +83,7 @@ export class CourseModuleController {
   }
 
   @Delete(':id')
-     @RequireRole('admin')
+  @RequireRole('admin')
   async deleteModule(@Param('id') id: string) {
     try {
       return await this.courseModuleService.deleteModule(id);

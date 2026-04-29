@@ -22,6 +22,7 @@ import { SerializeResponse } from 'src/common/interceptors/serialize.interceptor
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
+import { EnrollmentGuard } from 'src/common/guards/enrollment.guard';
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -56,6 +57,7 @@ export class MaterialsController {
 
   @Get()
   @RequireRole('admin', 'student')
+  @UseGuards(EnrollmentGuard)
   async getMaterialsByCourse(@Param('courseId') courseId: string) {
     try {
       return await this.materialService.getMaterialsByCourse(courseId);
@@ -66,6 +68,7 @@ export class MaterialsController {
   }
 
   @Get(':id')
+  @UseGuards(EnrollmentGuard)
   @RequireRole('admin', 'student')
   async getMaterialById(@Param('id') id: string) {
     try {
@@ -98,7 +101,7 @@ export class MaterialsController {
   }
 
   @Delete(':id')
-  @RequireRole('admin', 'student')
+  @RequireRole('admin')
   async deleteMaterial(@Param('id') id: string) {
     try {
       return await this.materialService.deleteMaterial(id);
