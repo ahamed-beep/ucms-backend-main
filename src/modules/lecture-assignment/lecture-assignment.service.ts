@@ -163,16 +163,21 @@ export class LectureAssignmentService implements ILectureAssignmentService {
 
   async getSubmissionsForAssignment(assignmentId: string): Promise<any[]> {
     try {
-      const submissions = await this.submissionModel.find({
-        lectureAssignmentId: new Types.ObjectId(assignmentId),
-      });
-      return submissions.map((s) => this.formatSubmission(s));
+      const submissions = await this.submissionModel
+        .find({ lectureAssignmentId: new Types.ObjectId(assignmentId) })
+        .populate('userId', 'firstName lastName emailId')
+        .lean();
+
+      return submissions.map((s) => this.formatSubmission(s as any));
     } catch {
       throw new InternalServerErrorException('Failed to fetch submissions');
     }
   }
 
-  private formatAssignment(assignment: LectureAssignmentDocument, submission: LectureAssignmentSubmissionDocument | null): any {
+  private formatAssignment(
+    assignment: LectureAssignmentDocument,
+    submission: LectureAssignmentSubmissionDocument | null,
+  ): any {
     return {
       id: (assignment._id as Types.ObjectId).toString(),
       lectureId: assignment.lectureId.toString(),
@@ -189,17 +194,31 @@ export class LectureAssignmentService implements ILectureAssignmentService {
     };
   }
 
-  private formatSubmission(submission: LectureAssignmentSubmissionDocument): any {
+  private formatSubmission(submission: any): any {
+    const raw = submission.userId;
+    const userObj =
+      raw && typeof raw === 'object' && !(raw instanceof Types.ObjectId)
+        ? {
+            _id: raw._id?.toString() ?? '',
+            name: [raw.firstName, raw.lastName].filter(Boolean).join(' ') || null,
+            email: raw.emailId ?? raw.email ?? null, // ✅ FIX: emailId pehle check karo
+          }
+        : {
+            _id: raw?.toString() ?? '',
+            name: null,
+            email: null,
+          };
+
     return {
-      id: (submission._id as Types.ObjectId).toString(),
-      lectureAssignmentId: submission.lectureAssignmentId.toString(),
-      userId: submission.userId.toString(),
+      id: submission._id?.toString(),
+      lectureAssignmentId: submission.lectureAssignmentId?.toString(),
+      userId: userObj,
       fileUrl: submission.fileUrl,
       status: submission.status,
       grade: submission.grade ?? null,
       feedback: submission.feedback ?? null,
-      createdAt: (submission as any).createdAt,
-      updatedAt: (submission as any).updatedAt,
+      createdAt: submission.createdAt,
+      updatedAt: submission.updatedAt,
     };
   }
 }

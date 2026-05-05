@@ -6,15 +6,12 @@ import {
   Get,
   Param,
   Body,
-  UploadedFile,
-  UseInterceptors,
   UseGuards,
   HttpCode,
   HttpStatus,
   HttpException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { LectureAssignmentService } from './lecture-assignment.service';
 import { CreateLectureAssignmentDto } from './dto/create-lecture-assignment.dto';
 import { UpdateLectureAssignmentDto } from './dto/update-lecture-assignment.dto';
@@ -24,8 +21,6 @@ import { SerializeResponse } from 'src/common/interceptors/serialize.interceptor
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
-import { multerMemoryOptions } from '../cloudinary/multer.config';
-import { LectureAssignmentSubmissionResponseDto } from './dto/lecture-assignment-submission-response.dto';
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -88,7 +83,6 @@ export class LectureAssignmentAdminController {
   }
 
   @Get(':assignmentId/submissions')
-  @SerializeResponse(LectureAssignmentSubmissionResponseDto)
   async getSubmissions(@Param('assignmentId') assignmentId: string) {
     try {
       return await this.assignmentService.getSubmissionsForAssignment(assignmentId);
@@ -99,7 +93,6 @@ export class LectureAssignmentAdminController {
   }
 
   @Patch(':assignmentId/submissions/:userId/grade')
-  @SerializeResponse(LectureAssignmentSubmissionResponseDto)
   async gradeSubmission(
     @Param('assignmentId') assignmentId: string,
     @Param('userId') userId: string,
