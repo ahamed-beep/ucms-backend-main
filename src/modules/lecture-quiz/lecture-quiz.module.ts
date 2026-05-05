@@ -24,5 +24,6 @@ import { LectureQuizController } from './lecture-quiz.controller';
   ],
   controllers: [LectureQuizController],
   providers: [LectureQuizService],
+  exports: [LectureQuizService, MongooseModule],
 })
 export class LectureQuizModule {}

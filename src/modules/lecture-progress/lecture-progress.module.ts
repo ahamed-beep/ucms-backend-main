@@ -8,6 +8,6 @@ import { LectureProgressService } from './lecture-progress.service';
   imports: [MongooseModule.forFeature([{ name: LectureProgress.name, schema: LectureProgressSchema }])],
   controllers: [LectureProgressController],
   providers: [LectureProgressService],
-  exports: [LectureProgressService],
+ exports: [LectureProgressService, MongooseModule],
 })
 export class LectureProgressModule {}

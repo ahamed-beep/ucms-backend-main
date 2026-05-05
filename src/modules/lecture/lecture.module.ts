@@ -18,6 +18,6 @@ import { CourseModule, CourseModuleSchema } from '../course-module/entities/cour
   ],
   controllers: [LecturesController],
   providers: [LectureService],
-  exports: [LectureService],
+exports: [LectureService, MongooseModule],
 })
 export class LecturesModule {}

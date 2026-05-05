@@ -14,6 +14,6 @@ import { Enrollment, EnrollmentSchema } from '../enrollment/entities/enrollment.
   ],
   controllers: [CourseModuleController],
   providers: [CourseModuleService],
-  exports: [CourseModuleService],
+  exports: [CourseModuleService, MongooseModule],  
 })
 export class CourseModuleNestModule {}
