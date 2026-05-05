@@ -41,6 +41,8 @@ import { ExercisesModule } from './modules/exercise/exercise.module';
 import { LectureProgressModule } from './modules/lecture-progress/lecture-progress.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
+import { LectureQuizModule } from './modules/lecture-quiz/lecture-quiz.module';
+import { LectureAssignmentModule } from './modules/lecture-assignment/lecture-assignment.module';
 
 @Module({
   imports: [
@@ -83,6 +85,8 @@ import { EnrollmentModule } from './modules/enrollment/enrollment.module';
     LectureProgressModule,
     InstructorModule,
     EnrollmentModule,
+    LectureQuizModule,
+    LectureAssignmentModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [

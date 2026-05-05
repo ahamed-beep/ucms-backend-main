@@ -7,6 +7,7 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { Enrollment, EnrollmentSchema } from '../enrollment/entities/enrollment.entity';
 import { CourseModule, CourseModuleSchema } from '../course-module/entities/course-module.entity';
 import { ModuleEnrollmentGuard } from 'src/common/guards/module-enrollment.guard';
+import { Lecture, LectureSchema } from '../lecture/entities/lecture.entity';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ModuleEnrollmentGuard } from 'src/common/guards/module-enrollment.guard
       { name: Resource.name, schema: ResourceSchema },
       { name: Enrollment.name, schema: EnrollmentSchema },
       { name: CourseModule.name, schema: CourseModuleSchema },
+      { name: Lecture.name, schema: LectureSchema },
     ]),
     CloudinaryModule,
   ],
