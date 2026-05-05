@@ -21,5 +21,6 @@ import { LectureAssignmentStudentController } from './lecture-assignment-student
   ],
   controllers: [LectureAssignmentAdminController, LectureAssignmentStudentController],
   providers: [LectureAssignmentService],
+  exports: [LectureAssignmentService, MongooseModule],  
 })
 export class LectureAssignmentModule {}
