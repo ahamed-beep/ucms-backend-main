@@ -44,6 +44,13 @@ import { EnrollmentModule } from './modules/enrollment/enrollment.module';
 import { LectureQuizModule } from './modules/lecture-quiz/lecture-quiz.module';
 import { LectureAssignmentModule } from './modules/lecture-assignment/lecture-assignment.module';
 import { StudentProgressModule } from './modules/student-progress/student-progress.module';
+import { ClassSessionModule } from './modules/class-session/class-session.module';
+import { StudyMaterialModule } from './modules/study-material/study-material.module';
+import { UserDocumentModule } from './modules/user-document/user-document.module';
+import { ApplicationModule } from './modules/application/application.module';
+import { SupportModule } from './modules/support/support.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -89,6 +96,13 @@ import { StudentProgressModule } from './modules/student-progress/student-progre
     LectureQuizModule,
     LectureAssignmentModule,
     StudentProgressModule,
+    ClassSessionModule,
+    StudyMaterialModule,
+    UserDocumentModule,
+    ApplicationModule,
+    SupportModule,
+    NotificationModule,
+    DashboardModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [

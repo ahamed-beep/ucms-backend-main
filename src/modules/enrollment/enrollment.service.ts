@@ -106,4 +106,44 @@ async getEnrollmentsByStudent(studentId: string): Promise<EnrollmentDocument[]> 
     throw new InternalServerErrorException('Failed to delete enrollment');
   }
 }
+
+async getMyEnrollments(studentId: string): Promise<EnrollmentDocument[]> {
+  try {
+    console.log('🔍 studentId received:', studentId);
+    console.log('🔍 studentId type:', typeof studentId);
+
+    // Check ALL enrollments first (no filter)
+    const allEnrollments = await this.enrollmentModel.find().lean();
+    console.log('📦 ALL enrollments in DB:', JSON.stringify(allEnrollments));
+    console.log('📊 Total enrollments in DB:', allEnrollments.length);
+
+    // Check what studentId field looks like in DB
+    if (allEnrollments.length > 0) {
+      console.log('🔑 Sample studentId from DB:', allEnrollments[0].studentId);
+      console.log('🔑 Sample studentId type:', typeof allEnrollments[0].studentId);
+    }
+
+    // Now try the actual query
+    const result = await this.enrollmentModel
+      .find({ studentId, isActive: true })
+      .lean();
+    console.log('✅ Query result:', JSON.stringify(result));
+    console.log('📊 Query result count:', result.length);
+
+    // Try without isActive filter
+    const withoutActive = await this.enrollmentModel
+      .find({ studentId })
+      .lean();
+    console.log('🔎 Without isActive filter:', JSON.stringify(withoutActive));
+    console.log('📊 Without isActive count:', withoutActive.length);
+
+    return await this.enrollmentModel
+      .find({ studentId, isActive: true })
+      .populate('courseId')
+      .lean();
+  } catch (err) {
+    console.error('❌ Error:', err);
+    throw new InternalServerErrorException('Failed to fetch enrollments');
+  }
+}
 }
