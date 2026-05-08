@@ -22,11 +22,14 @@ import { RequireRole } from 'src/common/decorators/roles.decorator';
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
 }
+
 @SerializeResponse(EnrollmentResponseDto)
 @UseGuards(RolesGuard, ActiveGuard)
 @Controller('enrollments')
 export class EnrollmentController {
   constructor(private readonly enrollmentService: EnrollmentService) {}
+
+  // ─── No param routes first ───────────────────────────────────────────
 
   @Post()
   @RequireRole('admin')
@@ -40,28 +43,17 @@ export class EnrollmentController {
     }
   }
 
-  @Patch(':id/toggle')
+  @Get()
   @RequireRole('admin')
-  @SerializeResponse(EnrollmentResponseDto)
-  async toggleEnrollment(@Param('id') id: string) {
+  async getAllEnrollments() {
     try {
-      return await this.enrollmentService.toggleEnrollment(id);
+      return await this.enrollmentService.getAllEnrollments();
     } catch (error) {
       rethrowIfHttp(error);
-      throw new InternalServerErrorException('Failed to toggle enrollment');
+      throw new InternalServerErrorException('Failed to fetch enrollments');
     }
   }
 
-@Get()
-@RequireRole('admin')
-async getAllEnrollments() {
-  try {
-    return await this.enrollmentService.getAllEnrollments();
-  } catch (error) {
-    rethrowIfHttp(error);
-    throw new InternalServerErrorException('Failed to fetch enrollments');
-  }
-}
   @Get('course/:courseId')
   @RequireRole('admin')
   @SerializeResponse(EnrollmentResponseDto)
@@ -74,7 +66,7 @@ async getAllEnrollments() {
     }
   }
 
- @Get('my-courses')
+  @Get('my-courses')
   @RequireRole('student')
   async getMyEnrolledCourses(@Request() req: any) {
     try {
@@ -85,15 +77,42 @@ async getAllEnrollments() {
     }
   }
 
+  @Get('my-enrollments')
+  @RequireRole('student')
+  async getMyEnrollments(@Request() req: any) {
+    try {
+      console.log('🎯 my-enrollments hit — user:', JSON.stringify(req.user));
+      const enrollments = await this.enrollmentService.getMyEnrollments(req.user.userId);
+      console.log('📤 Returning enrollments count:', enrollments.length);
+      return { data: enrollments };
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to fetch enrollments');
+    }
+  }
+
+  // ─── Param routes last ───────────────────────────────────────────────
+
+  @Patch(':id/toggle')
+  @RequireRole('admin')
+  @SerializeResponse(EnrollmentResponseDto)
+  async toggleEnrollment(@Param('id') id: string) {
+    try {
+      return await this.enrollmentService.toggleEnrollment(id);
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to toggle enrollment');
+    }
+  }
+
   @Delete(':id')
-@RequireRole('admin')
-async deleteEnrollment(@Param('id') id: string) {
-  try {
-    return await this.enrollmentService.deleteEnrollment(id);
-  } catch (error) {
-    rethrowIfHttp(error);
-    throw new InternalServerErrorException('Failed to delete enrollment');
+  @RequireRole('admin')
+  async deleteEnrollment(@Param('id') id: string) {
+    try {
+      return await this.enrollmentService.deleteEnrollment(id);
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to delete enrollment');
+    }
   }
 }
-}
-
