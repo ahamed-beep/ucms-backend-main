@@ -156,6 +156,8 @@ customerName: [payment.customer?.firstName, payment.customer?.lastName].filter(B
     return this.buildCaptureResponse(payment);
   }
 
+
+
   async cancelPayment(paymentId: string): Promise<{ success: boolean; message: string }> {
     const payment = await this.findById(paymentId);
 
@@ -215,4 +217,18 @@ customerName: [payment.customer?.firstName, payment.customer?.lastName].filter(B
       customer: payment.customer,
     };
   }
+
+    async findByCustomerEmail(email: string): Promise<PaymentDocument[]> {
+  try {
+    return await this.paymentModel
+      .find({
+        'customer.email': email.toLowerCase().trim(),
+        status: PaymentStatus.COMPLETED,
+      })
+      .sort({ createdAt: -1 });
+  } catch (error) {
+    this.logger.error(`Failed to fetch payments for email: ${email}`, error);
+    throw new InternalServerErrorException('Failed to fetch payments');
+  }
+}
 }

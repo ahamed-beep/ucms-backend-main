@@ -37,7 +37,7 @@ import { CourseModuleNestModule } from './modules/course-module/course-module.mo
 import { LecturesModule } from './modules/lecture/lecture.module';
 import { ResourcesModule } from './modules/resource/resource.module';
 import { MaterialsModule } from './modules/material/material.module';
-import { ExercisesModule } from './modules/exercise/exercise.module';
+import { ExerciseModule } from './modules/exercise/exercise.module';
 import { LectureProgressModule } from './modules/lecture-progress/lecture-progress.module';
 import { InstructorModule } from './modules/instructor/instructor.module';
 import { EnrollmentModule } from './modules/enrollment/enrollment.module';
@@ -89,7 +89,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     LecturesModule,
     ResourcesModule,
     MaterialsModule,
-    ExercisesModule,
+    ExerciseModule,
     LectureProgressModule,
     InstructorModule,
     EnrollmentModule,
