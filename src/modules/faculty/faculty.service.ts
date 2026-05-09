@@ -136,19 +136,28 @@ export class FacultyApplicationService {
   }
 
   async remove(id: string): Promise<void> {
-    const application = await this.facultyApplicationModel.findById(id);
+  const application = await this.facultyApplicationModel.findById(id);
 
-    if (!application) {
-      throw new NotFoundException('Faculty application not found.');
-    }
-
-    if (application.cvPublicId) {
-      const { v2: cloudinary } = require('cloudinary');
-      await cloudinary.uploader.destroy(application.cvPublicId, { resource_type: 'auto' });
-    }
-
-    await this.facultyApplicationModel.findByIdAndDelete(id);
+  if (!application) {
+    throw new NotFoundException('Faculty application not found.');
   }
+
+  if (application.cvPublicId) {
+    try {
+      const { v2: cloudinary } = require('cloudinary');
+      cloudinary.config({
+        cloud_name: this.configService.get<string>('CLOUDINARY_CLOUD_NAME'),
+        api_key: this.configService.get<string>('CLOUDINARY_API_KEY'),
+        api_secret: this.configService.get<string>('CLOUDINARY_API_SECRET'),
+      });
+      await cloudinary.uploader.destroy(application.cvPublicId, { resource_type: 'raw' });
+    } catch (err) {
+      console.warn('Cloudinary delete failed (continuing):', err?.message);
+    }
+  }
+
+  await this.facultyApplicationModel.findByIdAndDelete(id);
+}
 
   private async uploadCv(
     file: Express.Multer.File,

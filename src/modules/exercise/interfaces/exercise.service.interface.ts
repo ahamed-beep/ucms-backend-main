@@ -1,6 +1,6 @@
+import { CreateExerciseDto, UpdateExerciseDto } from '../dto/exercise.dto';
 import { ExerciseDocument } from '../entities/exercise.entity';
-import { CreateExerciseDto } from '../dto/create-exercise.dto';
-import { UpdateExerciseDto } from '../dto/update-exercise.dto';
+
 
 export interface IExerciseService {
   createExercise(courseId: string, dto: CreateExerciseDto): Promise<ExerciseDocument>;

@@ -1,17 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Exercise, ExerciseSchema } from './entities/exercise.entity';
-import { ExercisesController } from './exercise.controller';
+import { ExerciseAttempt, ExerciseAttemptSchema } from './entities/exercise-attempt.entity';
+import { ExerciseController } from './exercise.controller';
 import { ExerciseService } from './exercise.service';
-import { EnrollmentModule } from '../enrollment/enrollment.module';
+import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Exercise.name, schema: ExerciseSchema }]),
-    EnrollmentModule,
+    MongooseModule.forFeature([
+      { name: Exercise.name,        schema: ExerciseSchema },
+      { name: ExerciseAttempt.name, schema: ExerciseAttemptSchema },
+    ]),
+    CloudinaryModule,
   ],
-  controllers: [ExercisesController],
+  controllers: [ExerciseController],
   providers: [ExerciseService],
   exports: [ExerciseService],
 })
-export class ExercisesModule {}
+export class ExerciseModule {}
