@@ -12,9 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   InternalServerErrorException,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+  BadRequestException,
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -31,30 +29,42 @@ import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
 
-const pdfFilePipe = (required: boolean) =>
-  new ParseFilePipe({
-    validators: [
-      new MaxFileSizeValidator({ maxSize: 20 * 1024 * 1024 }),
-      new FileTypeValidator({ fileType: /application\/pdf/ }),
-    ],
-    fileIsRequired: required,
-  });
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+function validateDocumentFile(file: Express.Multer.File | undefined, required: boolean): void {
+  if (!file) {
+    if (required) throw new BadRequestException('File is required');
+    return;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new BadRequestException('File size must not exceed 20MB');
+  }
+  if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    throw new BadRequestException('Only PDF and DOC/DOCX files are allowed');
+  }
+}
 
 @Controller('ielts-resources')
 export class IeltsResourceController {
   constructor(private readonly ieltsResourceService: IeltsResourceService) {}
 
   @Post()
-   @UseGuards(RolesGuard, ActiveGuard)
-    @RequireRole('admin')
+  @UseGuards(RolesGuard, ActiveGuard)
+  @RequireRole('admin')
   @UseInterceptors(FileInterceptor('file', multerMemoryOptions))
   @SerializeResponse(IeltsResourceResponseDto)
   async create(
     @Body() dto: CreateIeltsResourceDto,
-    @UploadedFile(pdfFilePipe(true))
-    file: Express.Multer.File,
+    @UploadedFile() file: Express.Multer.File,
   ) {
     try {
+      validateDocumentFile(file, true);
       return await this.ieltsResourceService.create(dto, file);
     } catch (error: any) {
       if (error?.status) throw error;
@@ -87,17 +97,17 @@ export class IeltsResourceController {
   }
 
   @Patch(':id')
-   @UseGuards(RolesGuard, ActiveGuard)
-    @RequireRole('admin')
+  @UseGuards(RolesGuard, ActiveGuard)
+  @RequireRole('admin')
   @UseInterceptors(FileInterceptor('file', multerMemoryOptions))
   @SerializeResponse(IeltsResourceResponseDto)
   async update(
     @Param('id') id: string,
     @Body() dto: UpdateIeltsResourceDto,
-    @UploadedFile(pdfFilePipe(false))
-    file?: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     try {
+      validateDocumentFile(file, false);
       return await this.ieltsResourceService.update(id, dto, file);
     } catch (error: any) {
       if (error?.status) throw error;
@@ -106,8 +116,8 @@ export class IeltsResourceController {
   }
 
   @Delete(':id')
-   @UseGuards(RolesGuard, ActiveGuard)
-    @RequireRole('admin')
+  @UseGuards(RolesGuard, ActiveGuard)
+  @RequireRole('admin')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     try {
