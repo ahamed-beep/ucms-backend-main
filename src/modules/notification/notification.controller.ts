@@ -19,6 +19,22 @@ import { ActiveGuard } from 'src/common/guards/active.guard';
 import { RequireRole } from 'src/common/decorators/roles.decorator';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { RequestUser } from 'src/common/interfaces/jwt-payload.interface';
+import { IsArray, IsMongoId, IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { NotificationStatus } from './enums/notification-status.enum';
+
+class BulkNotificationDto {
+  @IsArray()
+  @IsMongoId({ each: true })
+  userIds: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  message: string;
+
+  @IsEnum(NotificationStatus)
+  @IsOptional()
+  status?: NotificationStatus;
+}
 
 function rethrowIfHttp(error: unknown): void {
   if (error instanceof HttpException) throw error;
@@ -30,17 +46,29 @@ function rethrowIfHttp(error: unknown): void {
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
-@Post('broadcast')
-@RequireRole('admin')
-async broadcast(@Body() dto: CreateNotificationDto) {
-  try {
-    await this.notificationService.broadcast(dto);
-    return { success: true, message: 'Notification sent to all students' };
-  } catch (error) {
-    rethrowIfHttp(error);
-    throw new InternalServerErrorException('Failed to broadcast');
+  @Post('broadcast')
+  @RequireRole('admin')
+  async broadcast(@Body() dto: CreateNotificationDto) {
+    try {
+      await this.notificationService.broadcast(dto);
+      return { success: true, message: 'Notification sent to all students' };
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to broadcast');
+    }
   }
-}
+
+  @Post('bulk')
+  @RequireRole('admin')
+  async createBulk(@Body() dto: BulkNotificationDto) {
+    try {
+      await this.notificationService.createBulk(dto);
+      return { success: true, message: `Notification sent to ${dto.userIds.length} students` };
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to send bulk notifications');
+    }
+  }
 
   @Post()
   @RequireRole('admin')
@@ -75,17 +103,6 @@ async broadcast(@Body() dto: CreateNotificationDto) {
     }
   }
 
-  @Patch(':id/read')
-  @RequireRole('student')
-  async markAsRead(@Param('id') id: string, @CurrentUser() user: RequestUser) {
-    try {
-      return await this.notificationService.markAsRead(id, user.userId);
-    } catch (error) {
-      rethrowIfHttp(error);
-      throw new InternalServerErrorException('Failed to mark as read');
-    }
-  }
-
   @Patch('read-all')
   @RequireRole('student')
   async markAllAsRead(@CurrentUser() user: RequestUser) {
@@ -95,6 +112,17 @@ async broadcast(@Body() dto: CreateNotificationDto) {
     } catch (error) {
       rethrowIfHttp(error);
       throw new InternalServerErrorException('Failed to mark all as read');
+    }
+  }
+
+  @Patch(':id/read')
+  @RequireRole('student')
+  async markAsRead(@Param('id') id: string, @CurrentUser() user: RequestUser) {
+    try {
+      return await this.notificationService.markAsRead(id, user.userId);
+    } catch (error) {
+      rethrowIfHttp(error);
+      throw new InternalServerErrorException('Failed to mark as read');
     }
   }
 

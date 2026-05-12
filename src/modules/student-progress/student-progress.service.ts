@@ -206,13 +206,17 @@ export class StudentProgressService implements IStudentProgressService {
             const quizzes = lectureQuizMap.get(lectureId) ?? [];
             for (const lq of quizzes) {
               const lqId = (lq._id as Types.ObjectId).toString();
-              const completion = quizCompletions.find(
-                (qc) => qc.lectureQuizId?.toString() === lqId,
-              );
-              if (completion) {
-                courseQuizScores.push(completion.scorePercent);
-                allQuizScores.push(completion.scorePercent);
-              }
+           const completion = quizCompletions.find((qc) => {
+    const qcLqId = (qc.lectureQuizId as any)?._id?.toString() 
+      ?? qc.lectureQuizId?.toString() 
+      ?? '';
+    return qcLqId === lqId;
+  });
+  
+  if (completion) {
+    courseQuizScores.push(completion.scorePercent);
+    allQuizScores.push(completion.scorePercent);
+  }
             }
 
             const assignments = assignmentMap.get(lectureId) ?? [];

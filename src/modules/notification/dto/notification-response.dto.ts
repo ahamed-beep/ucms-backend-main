@@ -10,9 +10,7 @@ export class NotificationResponseDto {
     const u = obj?.userId;
     if (!u) return null;
     if (typeof u === 'string') return u;
-    if (u._id) return u._id.toString();
-    if (u.id) return u.id;
-    return u.toString();
+    return u._id?.toString() ?? u.id ?? u.toString();
   })
   userId: string;
 
@@ -31,6 +29,10 @@ export class NotificationResponseDto {
     return u.emailId ?? u.email ?? null;
   })
   studentEmail: string;
+
+  @Expose()
+  @Transform(({ obj }) => obj?.courses ?? [])
+  courses: { id: string; title: string }[];
 
   @Expose()
   message: string;

@@ -51,6 +51,7 @@ import { ApplicationModule } from './modules/application/application.module';
 import { SupportModule } from './modules/support/support.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ConsultationSlotModule } from './consultation-slot/consultation-slot.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     SupportModule,
     NotificationModule,
     DashboardModule,
+    ConsultationSlotModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
