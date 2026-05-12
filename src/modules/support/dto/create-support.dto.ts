@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional, IsMongoId } from 'class-validator';
 
 export class CreateSupportDto {
   @IsString()
@@ -6,7 +6,6 @@ export class CreateSupportDto {
   fullName: string;
 
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @IsString()
@@ -16,4 +15,8 @@ export class CreateSupportDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @IsMongoId()
+  @IsOptional()
+  userId?: string;
 }

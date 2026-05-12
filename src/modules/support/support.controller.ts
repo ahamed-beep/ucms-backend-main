@@ -9,6 +9,7 @@ import {
   UseGuards,
   HttpException,
   InternalServerErrorException,
+  Request,
 } from '@nestjs/common';
 import { SupportService } from './support.service';
 import { CreateSupportDto } from './dto/create-support.dto';
@@ -29,11 +30,14 @@ export class SupportController {
   constructor(private readonly supportService: SupportService) {}
 
   @Post()
-    @UseGuards(RolesGuard, ActiveGuard)
+  @UseGuards(RolesGuard, ActiveGuard)
   @RequireRole('student')
-  async create(@Body() dto: CreateSupportDto) {
+  async create(@Body() dto: CreateSupportDto, @Request() req: any) {
     try {
-      return await this.supportService.create(dto);
+      return await this.supportService.create({
+        ...dto,
+        userId: req.user.userId,
+      });
     } catch (error) {
       rethrowIfHttp(error);
       throw new InternalServerErrorException('Failed to submit support request');

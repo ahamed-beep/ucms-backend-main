@@ -21,6 +21,14 @@ export class SupportResponseDto {
   status: string;
 
   @Expose()
+  @Transform(({ obj }) => obj?.userId?.toString() ?? null)
+  userId: string | null;
+
+  @Expose()
+  @Transform(({ obj }) => obj?.courses ?? [])
+  courses: { id: string; title: string }[];
+
+  @Expose()
   createdAt: Date;
 
   @Expose()

@@ -96,4 +96,17 @@ export class UserController {
       throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  @Get('by-course/:courseId')
+@RequireRole('admin')
+@HttpCode(HttpStatus.OK)
+@SerializeResponse(GetAllUsersResponseDto, UserDataDto)
+async getUsersByCourse(@Param('courseId') courseId: string) {
+  try {
+    return await this.userService.getUsersByCourse(courseId);
+  } catch (error) {
+    this.logger.error('getUsersByCourse error:', error);
+    if (error instanceof HttpException) throw error;
+    throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+}
 }

@@ -1,20 +1,22 @@
   import { Injectable, Logger, ConflictException, NotFoundException } from '@nestjs/common';
   import { InjectModel } from '@nestjs/mongoose';
-  import { Model } from 'mongoose';
+  import { Model, Types } from 'mongoose';
   import * as bcrypt from 'bcrypt';
   import { User, UserDocument } from './entities/user.entity';
   import { RegisterDto } from '../auth/dto/register.dto';
   import { IUser } from './interfaces/user.interface';
   import { UpdateUserDto } from './dto/update-user.dto';
   import { CreateUserDto } from './dto/create-user.dto';
+import { EnrollmentService } from '../enrollment/enrollment.service';
 
   @Injectable()
   export class UserService {
     private readonly logger = new Logger(UserService.name);
 
-    constructor(
-      @InjectModel(User.name) private userModel: Model<UserDocument>,
-    ) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly enrollmentService: EnrollmentService,
+  ) {}
 
     async createUser(registerDto: RegisterDto) {
       try {
@@ -162,4 +164,24 @@
         throw error;
       }
     }
+ async getUsersByCourse(courseId: string) {
+    try {
+      const enrollments = await this.enrollmentService.getEnrollmentsByCourse(courseId);
+      const userIds = enrollments.map((e) => e.studentId);
+
+      const users = await this.userModel
+        .find({ _id: { $in: userIds } }, { password: 0 })
+        .sort({ createdAt: -1 });
+
+      return {
+        success: true,
+        message: 'Users fetched successfully',
+        total: users.length,
+        data: users,
+      };
+    } catch (error) {
+      this.logger.error('getUsersByCourse error:', error);
+      throw error;
+    }
+  }
   }

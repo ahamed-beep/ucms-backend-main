@@ -34,17 +34,17 @@ async createApplication(dto: CreateApplicationDto): Promise<ApplicationDocument>
   }
 }
 
-  async getAllApplications(): Promise<ApplicationDocument[]> {
-    try {
-      return await this.applicationModel
-        .find()
-        .populate('userId', 'firstName lastName email')
-        .sort({ createdAt: -1 })
-        .lean() as any;
-    } catch {
-      throw new InternalServerErrorException('Failed to fetch applications');
-    }
+ async getAllApplications(): Promise<ApplicationDocument[]> {
+  try {
+    return await this.applicationModel
+      .find()
+      .populate('userId', 'firstName lastName emailId')
+      .sort({ createdAt: -1 })
+      .lean() as any;
+  } catch {
+    throw new InternalServerErrorException('Failed to fetch applications');
   }
+}
 
   async getMyApplications(userId: string): Promise<ApplicationDocument[]> {
   try {

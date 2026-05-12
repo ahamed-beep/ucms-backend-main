@@ -9,6 +9,7 @@ import { Notification, NotificationDocument } from './entities/notification.enti
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { INotificationService } from './interfaces/notification.service.interface';
 import { User, UserDocument } from '../user/entities/user.entity';
+import { Enrollment, EnrollmentDocument } from '../enrollment/entities/enrollment.entity';
 import { NotificationStatus } from './enums/notification-status.enum';
 
 @Injectable()
@@ -16,8 +17,10 @@ export class NotificationService implements INotificationService {
   constructor(
     @InjectModel(Notification.name)
     private readonly notificationModel: Model<NotificationDocument>,
-     @InjectModel(User.name)
-  private readonly userModel: Model<UserDocument>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<UserDocument>,
+    @InjectModel(Enrollment.name)
+    private readonly enrollmentModel: Model<EnrollmentDocument>,
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<NotificationDocument> {
@@ -31,19 +34,33 @@ export class NotificationService implements INotificationService {
       throw new InternalServerErrorException('Failed to create notification');
     }
   }
-  async broadcast(dto: Omit<CreateNotificationDto, 'userId'>): Promise<void> {
-  try {
-    const users = await this.userModel.find({ role: 'student' }, { _id: 1 }).lean();
-    const notifications = users.map((u) => ({
-      userId: u._id,
-      message: dto.message,
-      status: dto.status ?? NotificationStatus.PENDING,
-    }));
-    await this.notificationModel.insertMany(notifications);
-  } catch {
-    throw new InternalServerErrorException('Failed to broadcast notification');
+
+  async createBulk(dto: Omit<CreateNotificationDto, 'userId'> & { userIds: string[] }): Promise<void> {
+    try {
+      const notifications = dto.userIds.map((uid) => ({
+        userId: new Types.ObjectId(uid),
+        message: dto.message,
+        status: dto.status ?? NotificationStatus.PENDING,
+      }));
+      await this.notificationModel.insertMany(notifications);
+    } catch {
+      throw new InternalServerErrorException('Failed to create bulk notifications');
+    }
   }
-}
+
+  async broadcast(dto: Omit<CreateNotificationDto, 'userId'>): Promise<void> {
+    try {
+      const users = await this.userModel.find({ role: 'student' }, { _id: 1 }).lean();
+      const notifications = users.map((u) => ({
+        userId: u._id,
+        message: dto.message,
+        status: dto.status ?? NotificationStatus.PENDING,
+      }));
+      await this.notificationModel.insertMany(notifications);
+    } catch {
+      throw new InternalServerErrorException('Failed to broadcast notification');
+    }
+  }
 
   async findAllByUser(userId: string): Promise<NotificationDocument[]> {
     try {
@@ -56,17 +73,50 @@ export class NotificationService implements INotificationService {
     }
   }
 
- async findAll(): Promise<NotificationDocument[]> {
-  try {
-    return await this.notificationModel
-      .find()
-      .populate('userId', 'firstName lastName emailId email')
-      .sort({ createdAt: -1 })
-      .lean() as any;
-  } catch {
-    throw new InternalServerErrorException('Failed to fetch notifications');
+  async findAll(): Promise<any[]> {
+    try {
+      const notifications = await this.notificationModel
+        .find()
+        .populate('userId', 'firstName lastName emailId email')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const userIds = [
+        ...new Set(
+          notifications
+            .map((n) => (n.userId as any)?._id?.toString() ?? n.userId?.toString())
+            .filter(Boolean),
+        ),
+      ];
+
+      const enrollments = await this.enrollmentModel
+        .find({ studentId: { $in: userIds } })
+        .populate('courseId', 'title')
+        .lean();
+
+      const enrollmentMap: Record<string, { id: string; title: string }[]> = {};
+      for (const e of enrollments) {
+        const sid = e.studentId?.toString();
+        if (!sid) continue;
+        if (!enrollmentMap[sid]) enrollmentMap[sid] = [];
+        const course = e.courseId as any;
+        if (course?._id) {
+          enrollmentMap[sid].push({ id: course._id.toString(), title: course.title });
+        }
+      }
+
+      return notifications.map((n) => {
+        const u = n.userId as any;
+        const uid = u?._id?.toString() ?? n.userId?.toString();
+        return {
+          ...n,
+          courses: enrollmentMap[uid] ?? [],
+        };
+      });
+    } catch {
+      throw new InternalServerErrorException('Failed to fetch notifications');
+    }
   }
-}
 
   async markAsRead(id: string, userId: string): Promise<NotificationDocument> {
     try {
