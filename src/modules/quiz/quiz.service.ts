@@ -7,8 +7,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Quiz, QuizDocument } from './entities/quiz.entity';
-import { QuizStatus } from './enums/quiz.enum';
-
+import { QuizStatus, QuizType } from './enums/quiz.enum';
 import { IQuizResult, IPaginatedQuizzes } from './interfaces/quiz.interface';
 import { ToggleQuizStatusDto } from './dto/toggle-quiz-status.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -31,12 +30,13 @@ export class QuizService {
 
   async findAll(query: QuizQueryDto): Promise<IPaginatedQuizzes> {
     try {
-      const { status, category, difficulty, page = 1, limit = 10 } = query;
+      const { status, category, difficulty, quizType, page = 1, limit = 10 } = query;
       const filter: Record<string, any> = {};
 
       if (status) filter.status = status;
       if (category) filter.category = category;
       if (difficulty) filter.difficulty = difficulty;
+      if (quizType) filter.quizType = quizType;
 
       const skip = (page - 1) * limit;
       const [docs, total] = await Promise.all([
@@ -56,8 +56,13 @@ export class QuizService {
     }
   }
 
+  // Public home page — sirf standalone active quizzes
   async findAllActive(query: QuizQueryDto): Promise<IPaginatedQuizzes> {
-    return this.findAll({ ...query, status: QuizStatus.ACTIVE });
+    return this.findAll({
+      ...query,
+      status: QuizStatus.ACTIVE,
+      quizType: QuizType.STANDALONE,
+    });
   }
 
   async findOne(id: string): Promise<QuizDocument> {
@@ -84,7 +89,10 @@ export class QuizService {
 
   async update(id: string, dto: UpdateQuizDto): Promise<QuizDocument> {
     try {
-      const quiz = await this.quizModel.findByIdAndUpdate(id, dto, { new: true, runValidators: true });
+      const quiz = await this.quizModel.findByIdAndUpdate(id, dto, {
+        new: true,
+        runValidators: true,
+      });
       if (!quiz) throw new NotFoundException('Quiz not found');
       return quiz;
     } catch (error) {
