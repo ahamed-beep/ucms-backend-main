@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import {  QuizDifficulty, QuizStatus } from '../enums/quiz.enum';
+import { QuizDifficulty, QuizStatus, QuizType } from '../enums/quiz.enum';
 
 export type QuizDocument = Quiz & Document;
 
@@ -26,14 +26,17 @@ export class Quiz {
   @Prop({ trim: true })
   description?: string;
 
-@Prop({ required: true, trim: true })
-category: string;
+  @Prop({ required: true, trim: true })
+  category: string;
 
   @Prop({ required: true, enum: QuizDifficulty, default: QuizDifficulty.MEDIUM })
   difficulty: QuizDifficulty;
 
   @Prop({ required: true, enum: QuizStatus, default: QuizStatus.ACTIVE })
   status: QuizStatus;
+
+  @Prop({ required: true, enum: QuizType, default: QuizType.STANDALONE })
+  quizType: QuizType;
 
   @Prop({ required: true, min: 1, default: 28 })
   timeLimitMinutes: number;

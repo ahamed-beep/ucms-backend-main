@@ -1,4 +1,4 @@
-import {  QuizDifficulty, QuizStatus } from '../enums/quiz.enum';
+import { QuizDifficulty, QuizStatus, QuizType } from '../enums/quiz.enum';
 
 export interface IQuizQuestion {
   question: string;
@@ -13,6 +13,7 @@ export interface IQuiz {
   category: string;
   difficulty: QuizDifficulty;
   status: QuizStatus;
+  quizType: QuizType;
   timeLimitMinutes: number;
   questions: IQuizQuestion[];
   totalQuestions: number;
@@ -37,6 +38,7 @@ export interface IQuizListItem {
   category: string;
   difficulty: QuizDifficulty;
   status: QuizStatus;
+  quizType: QuizType;
   timeLimitMinutes: number;
   totalQuestions: number;
   attempts: number;
