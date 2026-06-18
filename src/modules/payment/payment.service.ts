@@ -59,9 +59,9 @@ export class PaymentService {
       throw new InternalServerErrorException('Failed to initiate payment');
     }
 
-    const backendUrl = this.configService.getOrThrow<string>('BACKEND_URL');
-    const returnUrl = `${backendUrl}/api/payments/capture?paymentId=${payment._id}`;
-    const cancelUrl = `${backendUrl}/api/payments/cancel?paymentId=${payment._id}`;
+const backendUrl = this.configService.getOrThrow<string>('BACKEND_URL');
+const returnUrl = `${backendUrl}/payments/capture?paymentId=${payment._id}`;
+const cancelUrl = `${backendUrl}/payments/cancel?paymentId=${payment._id}`;
 
     const paypalOrder: IPayPalCreateOrderResponse = await this.paypalService.createOrder(
       amount,

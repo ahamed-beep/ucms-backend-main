@@ -3,7 +3,7 @@ import { VideoStatus } from '../enums/video-library.enum';
 
 export class CreateVideoLibraryDto {
   @IsString()
-  @MinLength(3)
+  @MinLength(1)
   title: string;
 
   @IsString()
