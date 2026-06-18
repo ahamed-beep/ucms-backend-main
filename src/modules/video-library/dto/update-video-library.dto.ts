@@ -4,7 +4,7 @@ import { VideoStatus } from '../enums/video-library.enum';
 export class UpdateVideoLibraryDto {
   @IsOptional()
   @IsString()
-  @MinLength(3)
+  @MinLength(1)
   title?: string;
 
   @IsOptional()
