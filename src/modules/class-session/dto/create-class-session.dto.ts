@@ -3,14 +3,11 @@ import {
   IsNotEmpty,
   IsMongoId,
   IsDateString,
-  IsNumber,
   IsEnum,
   IsOptional,
   IsArray,
   IsUrl,
-  Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ClassSessionType } from '../entities/class-session.entity';
 
 export class CreateClassSessionDto {
@@ -24,10 +21,8 @@ export class CreateClassSessionDto {
   @IsDateString()
   scheduledAt: string;
 
-  @IsNumber()
-  @Min(1)
-  @Type(() => Number)
-  durationMinutes: number;
+  @IsDateString()
+  endAt: string;
 
   @IsEnum(ClassSessionType)
   @IsOptional()

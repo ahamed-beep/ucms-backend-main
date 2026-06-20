@@ -20,7 +20,7 @@ export class ClassSession {
   scheduledAt: Date;
 
   @Prop({ required: true })
-  durationMinutes: number;
+  endAt: Date;
 
   @Prop({ type: String, enum: ClassSessionType, default: ClassSessionType.VIDEO })
   type: ClassSessionType;
