@@ -25,10 +25,11 @@ export class ClassSessionService {
 
   async createClassSession(dto: CreateClassSessionDto): Promise<ClassSessionDocument> {
     try {
-        const session = new this.classSessionModel({
-      ...dto,
-      scheduledAt: new Date(`${dto.scheduledAt}Z`), 
-    });
+      const session = new this.classSessionModel({
+        ...dto,
+        scheduledAt: new Date(`${dto.scheduledAt}Z`),
+        endAt: new Date(`${dto.endAt}Z`),
+      });
       return await session.save();
     } catch {
       throw new InternalServerErrorException('Failed to create class session');
@@ -100,7 +101,7 @@ export class ClassSessionService {
 
       for (const s of sessions) {
         const session = { ...s, attended: attendedIds.has(s._id.toString()) };
-        const day = days[new Date(s.scheduledAt).getDay()];
+        const day = days[new Date(s.scheduledAt).getUTCDay()];
         if (!grouped[day]) grouped[day] = [];
         grouped[day].push(session);
       }
@@ -179,23 +180,27 @@ export class ClassSessionService {
     }
   }
 
-async updateClassSession(id: string, dto: UpdateClassSessionDto): Promise<ClassSessionDocument> {
-  try {
-    const session = await this.classSessionModel.findById(id);
-    if (!session) throw new NotFoundException('Class session not found');
+  async updateClassSession(id: string, dto: UpdateClassSessionDto): Promise<ClassSessionDocument> {
+    try {
+      const session = await this.classSessionModel.findById(id);
+      if (!session) throw new NotFoundException('Class session not found');
 
-    const updateData = { ...dto };
-    if (updateData.scheduledAt) {
-      updateData.scheduledAt = new Date(`${updateData.scheduledAt}Z`) as any;
+      const updateData: any = { ...dto };
+      if (updateData.scheduledAt) {
+        updateData.scheduledAt = new Date(`${updateData.scheduledAt}Z`);
+      }
+      if (updateData.endAt) {
+        updateData.endAt = new Date(`${updateData.endAt}Z`);
+      }
+
+      Object.assign(session, updateData);
+      return await session.save();
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Failed to update class session');
     }
-
-    Object.assign(session, updateData); // ✅ updateData use karo
-    return await session.save();
-  } catch (error) {
-    if (error instanceof NotFoundException) throw error;
-    throw new InternalServerErrorException('Failed to update class session');
   }
-}
+
   async deleteClassSession(id: string): Promise<void> {
     try {
       const session = await this.classSessionModel.findById(id);

@@ -54,7 +54,7 @@ export class ClassSessionResponseDto {
   scheduledAt: Date;
 
   @Expose()
-  durationMinutes: number;
+  endAt: Date;
 
   @Expose()
   type: string;
