@@ -32,8 +32,8 @@ export class CreateDestinationDto {
 
   @IsArray()
   @IsString({ each: true })
-  @ArrayMinSize(1)
-  universities: string[];
+  @IsOptional()
+  universities?: string[];
 
   @IsBoolean()
   @IsOptional()
