@@ -1,11 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { getAdminLoginAlertTemplate } from './templates/admin-login-alert.template';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter;
+   private adminAlertTransporter: nodemailer.Transporter;
 
   constructor(private configService: ConfigService) {
  this.transporter = nodemailer.createTransport({
@@ -17,6 +19,15 @@ export class EmailService {
     pass: this.configService.get<string>('SMTP_PASS'), 
   },
 });
+   this.adminAlertTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: this.configService.get<string>('ADMIN_ALERT_SMTP_USER'),
+        pass: this.configService.get<string>('ADMIN_ALERT_SMTP_PASS'),
+      },
+    });
   }
 
   async sendOtpEmail(email: string, otp: string): Promise<void> {
@@ -41,4 +52,31 @@ export class EmailService {
       throw error;
     }
   }
+
+async sendAdminLoginAlert(
+  firstName: string,
+  lastName: string,
+  loggedInEmail: string,
+): Promise<void> {
+  try {
+    const loginTime = new Date().toLocaleString('en-US', {
+      dateStyle: 'medium',
+      timeStyle: 'medium',
+    });
+
+    const resetPasswordUrl = 'https://ucms.net.au/verify';
+    const adminNotifyEmail = this.configService.get<string>('ADMIN_ALERT_SMTP_USER');
+
+    await this.adminAlertTransporter.sendMail({
+      from: `"Support" <${adminNotifyEmail}>`,
+      to: adminNotifyEmail,
+      subject: '⚠️ Admin Login Alert',
+      html: getAdminLoginAlertTemplate(firstName, lastName, loggedInEmail, loginTime, resetPasswordUrl),
+    });
+
+    this.logger.log(`Admin login alert sent to ${adminNotifyEmail}`);
+  } catch (error) {
+    this.logger.error('sendAdminLoginAlert error:', error);
+  }
+}
 }

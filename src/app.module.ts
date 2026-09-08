@@ -52,6 +52,8 @@ import { SupportModule } from './modules/support/support.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { ConsultationSlotModule } from './consultation-slot/consultation-slot.module';
+import { AboutUsResourceModule } from './modules/about-us-resource/about-us-resource.module';
+import { CareerResourceModule } from './modules/career-resource/career-resource.module';
 
 @Module({
   imports: [
@@ -105,6 +107,8 @@ import { ConsultationSlotModule } from './consultation-slot/consultation-slot.mo
     NotificationModule,
     DashboardModule,
     ConsultationSlotModule,
+    AboutUsResourceModule,
+    CareerResourceModule,
   ],
   controllers: [AppController, ServicePageController],
   providers: [
