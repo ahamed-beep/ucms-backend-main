@@ -60,6 +60,14 @@ export class AuthService {
         role: user.role,
       });
 
+      if (user.role === 'admin') {
+        this.emailService.sendAdminLoginAlert(
+          user.firstName,
+          user.lastName,
+          user.emailId,
+        );
+      }
+
       return {
         success: true,
         status: 200,
