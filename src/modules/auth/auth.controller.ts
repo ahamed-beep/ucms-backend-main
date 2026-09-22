@@ -59,12 +59,18 @@ export class AuthController {
       throw new HttpException('Server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  @Public()
+ @Public()
 @Post('forgot-password')
 @HttpCode(HttpStatus.OK)
 async forgotPassword(@Body() dto: ForgotPasswordDto) {
   try {
-    return await this.authService.forgotPassword(dto.emailId);
+    const result = await this.authService.forgotPassword(dto.emailId);
+
+    if (!result.success) {
+      throw new HttpException(result.message, result.status ?? HttpStatus.BAD_REQUEST);
+    }
+
+    return result;
   } catch (error) {
     this.logger.error('forgotPassword error:', error);
     if (error instanceof HttpException) throw error;
@@ -77,7 +83,13 @@ async forgotPassword(@Body() dto: ForgotPasswordDto) {
 @HttpCode(HttpStatus.OK)
 async resendOtp(@Body() dto: ResendOtpDto) {
   try {
-    return await this.authService.resendOtp(dto.emailId);
+    const result = await this.authService.resendOtp(dto.emailId);
+
+    if (!result.success) {
+      throw new HttpException(result.message, result.status ?? HttpStatus.BAD_REQUEST);
+    }
+
+    return result;
   } catch (error) {
     this.logger.error('resendOtp error:', error);
     if (error instanceof HttpException) throw error;

@@ -87,7 +87,7 @@ export class AuthService {
     }
   }
 
-  async forgotPassword(emailId: string) {
+async forgotPassword(emailId: string) {
   try {
     const email = emailId.toLowerCase().trim();
     const user = await this.userService.findByEmail(email);
@@ -100,19 +100,23 @@ export class AuthService {
       return { success: false, status: 403, message: 'Account is disabled. Contact support.' };
     }
 
+    if (user.role === 'admin') {
+      return { success: false, status: 403, message: 'Admin cannot change password via forgot password.' };
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-   const otpToken = this.jwtService.sign(
-  { email, otp, purpose: OTP_PURPOSE.VERIFICATION },
-  { expiresIn: '5m' },
-);
+    const otpToken = this.jwtService.sign(
+      { email, otp, purpose: OTP_PURPOSE.VERIFICATION },
+      { expiresIn: '5m' },
+    );
 
     await this.emailService.sendOtpEmail(email, otp);
 
     return {
       success: true,
       message: 'OTP sent to your email.',
-      otpToken, 
+      otpToken,
     };
   } catch (error) {
     this.logger.error('forgotPassword error:', error);
